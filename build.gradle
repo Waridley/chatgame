@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'waridley'
+version '0.1'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+
+    jcenter()
+    maven { url "https://oss.jfrog.org/artifactory/libs-release"}
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    //MongoDB interface
+    compile 'dev.morphia.morphia:core:1.5.3'
+
+    //Twitch API library
+    compile 'com.github.twitch4j:twitch4j:1.0.0-alpha.16'
+    //Let's see how it handles typing.
+}
