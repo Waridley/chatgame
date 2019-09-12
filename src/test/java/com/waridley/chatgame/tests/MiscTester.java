@@ -14,7 +14,7 @@ public class MiscTester {
 	public static void main(String[] args) {
 		TwitchMessagingInterface client = TwitchMessagingInterfaceBuilder.builder()
 				.withClientId("WaridleyTestBot")
-				.withClientSecret("oauth:2bshf4j3qkrakt32ays8yky8zp2toz")
+				.withClientSecret(args[0])
 				.build();
 		
 		final Morphia morphia = new Morphia();
