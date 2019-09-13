@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 /* TODO:
  *  Implement currency logging
  *  Link Player object to each TwitchUser
+ *  Implement blacklist
  */
 
 public class WatchtimeLogger {
@@ -63,7 +64,7 @@ public class WatchtimeLogger {
 				null,
 				Arrays.asList(new String[] {channelName})
 		).execute().getStreams();
-		if(resultList.size() > 0) {
+		if(resultList.size() > 0) { //channel is streaming?
 			goOnline();
 			System.out.println(channelName + " is streaming! Title: " + resultList.get(0).getTitle());
 		} else {
@@ -73,19 +74,21 @@ public class WatchtimeLogger {
 		client.getEventManager().onEvent(ChannelGoLiveEvent.class).subscribe(event -> {
 			if(event.getChannel().getName().equalsIgnoreCase(channelName)) {
 				goOnline();
+				System.out.println("Logging in online mode");
 			}
 		});
 		client.getEventManager().onEvent(ChannelGoOfflineEvent.class).subscribe(event -> {
 			if(event.getChannel().getName().equalsIgnoreCase(channelName)) {
 				goOffline();
+				System.out.println("Logging in offline mode");
 			}
 		});
 		
 		loggerTask = new LoggerTask();
 		lastUpdate = 0;
-		scheduler = Executors.newSingleThreadScheduledExecutor();
 		try {
 			setInterval(intervalMinutes);
+			System.out.println("Interval set to " + this.getInterval());
 		} catch(InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -94,7 +97,12 @@ public class WatchtimeLogger {
 	
 	public void setInterval(long minutes) throws InterruptedException {
 		this.interval = minutes;
-		scheduler.awaitTermination(30L, TimeUnit.SECONDS);
+		if(scheduler != null) {
+			scheduler.shutdown();
+			scheduler.awaitTermination(30L, TimeUnit.SECONDS);
+		}
+		scheduler = Executors.newSingleThreadScheduledExecutor();
+		System.out.println("Scheduler created");
 		scheduler.scheduleAtFixedRate(loggerTask, 0L, this.interval, TimeUnit.MINUTES);
 	}
 	
@@ -114,9 +122,6 @@ public class WatchtimeLogger {
 			
 			for(User user : chatters.getUsers()) {
 				
-				long initOnline = 0L, initOffline = 0L;
-				if(online) initOnline = interval;
-				else initOffline = interval;
 				
 				TwitchUser twitchUser = twitchUsersCollection.findOneAndUpdate(
 					Filters.eq(
@@ -127,8 +132,8 @@ public class WatchtimeLogger {
 						new Document(
 							"$setOnInsert",
 							new Document("userid", user.getId())
-								.append("onlineMinutes", initOnline)
-								.append("offlineMinutes", initOffline)
+								.append("onlineMinutes", 0L)
+								.append("offlineMinutes", 0L)
 						),
 						new Document(
 							"$set",
@@ -196,7 +201,7 @@ public class WatchtimeLogger {
 			try {
 				parent.updateChatters();
 				parent.logAllMinutes(parent.getInterval());
-				System.out.println("Users in chat:");
+				System.out.println("Users in chat at " + new Date().toString());
 				for(TwitchUser user : parent.getUsersInChat()) {
 					System.out.println(user.toString());
 				}

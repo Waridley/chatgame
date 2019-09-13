@@ -2,6 +2,11 @@ package com.waridley.chatgame.ttv_integration;
 
 import com.waridley.chatgame.Player;
 
+
+/* TODO:
+ *  Log chat messages
+ */
+
 public class TwitchUser {
 	private long userid;
 	public long getUserId() { return userid; }
@@ -22,6 +27,8 @@ public class TwitchUser {
 	public long getTotalMinutes() { return onlineMinutes + offlineMinutes; }
 	
 	private Player gameAcct;
+	public Player getGameAcct() { return gameAcct; }
+	public void setGameAcct(Player gameAcct) { this.gameAcct = gameAcct; }
 	
 	@Override
 	public String toString() {

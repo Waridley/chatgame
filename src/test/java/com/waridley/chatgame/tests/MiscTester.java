@@ -9,6 +9,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.waridley.chatgame.Player;
 import com.waridley.chatgame.ttv_integration.TwitchUser;
 import com.waridley.chatgame.ttv_integration.WatchtimeLogger;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -50,7 +51,11 @@ public class MiscTester {
 		
 		MongoClient mongoClient = MongoClients.create(settings);
 		MongoDatabase db = mongoClient.getDatabase("chatgame");
-		PojoCodecProvider codecProvider = PojoCodecProvider.builder().automatic(true).register(TwitchUser.class).build();
+		PojoCodecProvider codecProvider = PojoCodecProvider.builder()
+				.automatic(true)
+				.register(TwitchUser.class)
+				.register(Player.class)
+				.build();
 		CodecRegistry pojoCodecRegistry = fromRegistries(
 				com.mongodb.MongoClient.getDefaultCodecRegistry(),
 				fromProviders(codecProvider));
