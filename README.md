@@ -1,6 +1,5 @@
-# chatgame
-Runescape-inspired idle game played through chat interface.
-
+A Runescape-inspired idle game played through chat interface.
+Name TBA.
 
 ## LICENSE
 Copyright (c) 2019 Kevin Day
