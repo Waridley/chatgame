@@ -21,18 +21,17 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 public class MiscTester {
 	
 	/* TODO:
-	 *  Migrate code to main module
+	 *  Clean up and migrate code to main module
 	 */
 	
 	public static void main(String[] args) {
 		String channelName = args[0];
 		String oauthToken = args[1];
-		String mongoUname = args[2];
-		String mongoPwd = args[3];
+		ConnectionString connectionString = new ConnectionString(args[2]);
+		
 		long intervalMinutes = 6;
 		
-		OAuth2Credential ttvCred = new OAuth2Credential("waridley_chatgame", oauthToken);
-		
+		OAuth2Credential ttvCred = new OAuth2Credential("twitch", oauthToken);
 		TwitchClient twitchClient = TwitchClientBuilder.builder()
 				.withEnableHelix(true)
 				.withEnableChat(true)
@@ -41,8 +40,7 @@ public class MiscTester {
 				.build();
 		twitchClient.getClientHelper().enableStreamEventListener(channelName);
 		
-		ConnectionString connectionString = new ConnectionString(
-				"mongodb+srv://" + mongoUname + ":" + mongoPwd + "@chatgame-jwz1u.gcp.mongodb.net/test?retryWrites=true&w=majority");
+		
 		
 		MongoClientSettings settings = MongoClientSettings.builder()
 				.applyConnectionString(connectionString)

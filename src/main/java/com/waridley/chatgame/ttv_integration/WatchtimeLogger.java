@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
  *  Implement currency logging
  *  Link Player object to each TwitchUser
  *  Implement blacklist
+ *  Methods have been made syncronized, but that doesn't make fields thread-safe
  */
 
 public class WatchtimeLogger {
@@ -55,14 +56,13 @@ public class WatchtimeLogger {
 		
 		List<Stream> resultList = twitchClient.getHelix().getStreams(
 				"",
-				"",
 				null,
 				1,
 				null,
 				null,
 				null,
 				null,
-				Arrays.asList(new String[] {channelName})
+				Collections.singletonList(channelName)
 		).execute().getStreams();
 		if(resultList.size() > 0) { //channel is streaming?
 			goOnline();
@@ -95,7 +95,7 @@ public class WatchtimeLogger {
 		
 	}
 	
-	public void setInterval(long minutes) throws InterruptedException {
+	public synchronized void setInterval(long minutes) throws InterruptedException {
 		this.interval = minutes;
 		if(scheduler != null) {
 			scheduler.shutdown();
@@ -106,7 +106,7 @@ public class WatchtimeLogger {
 		scheduler.scheduleAtFixedRate(loggerTask, 0L, this.interval, TimeUnit.MINUTES);
 	}
 	
-	private void updateChatters() throws RateLimitException {
+	private synchronized void updateChatters() throws RateLimitException {
 		//Update no more often than 30 seconds
 		if(new Date().getTime() - getLastUpdate() >= 30 * 1000) {
 			usersInChat = new ArrayList<>();
@@ -153,7 +153,7 @@ public class WatchtimeLogger {
 	}
 	
 	
-	private TwitchUser logMinutes(TwitchUser user, long minutes) {
+	private synchronized TwitchUser logMinutes(TwitchUser user, long minutes) {
 		String status;
 		long currentMinutes;
 		
@@ -176,19 +176,18 @@ public class WatchtimeLogger {
 		return updatedUser;
 	}
 	
-	private void logAllMinutes(long minutes) {
+	private synchronized void logAllMinutes(long minutes) {
 		List<TwitchUser> users = getUsersInChat();
 		for(int i = 0; i < users.size(); i++) {
 			users.set(i, logMinutes(users.get(i), minutes));
 		}
 	}
 	
-	public void goOnline() {
+	public synchronized void goOnline() {
 		online = true;
-		
 	}
 	
-	public void goOffline() {
+	public synchronized void goOffline() {
 		online = false;
 		
 	}
