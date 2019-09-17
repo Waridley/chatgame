@@ -20,8 +20,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /* TODO:
- *  Implement currency logging
+ *  Use AuthenticationController instead of passing token to constructor
  *  Link Player object to each TwitchUser
+ *  Implement currency logging
  *  Implement blacklist
  *  Methods have been made synchronized, but that doesn't make fields thread-safe
  */

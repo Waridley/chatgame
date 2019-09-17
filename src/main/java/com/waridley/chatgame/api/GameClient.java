@@ -5,6 +5,6 @@
 
 package com.waridley.chatgame.api;
 
-public interface Client {
+public interface GameClient {
 
 }

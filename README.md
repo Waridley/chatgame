@@ -1,5 +1,5 @@
 ## About
-I am creating this MMORPG-inspired text-based idle game as something for my viewers to play while I am streaming.
+I am creating this MMORPG-inspired, text-based, idle game as something for my viewers to play while I am streaming.
 I have not yet decided on a name, but it will probably be sci-fi-themed.
 Currently it is heavily tied to Twitch integration, and that is the primary way I plan to monetize it.
 I am planning to also make it playable through other chat clients such as Discord,
