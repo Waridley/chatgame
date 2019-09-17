@@ -6,6 +6,7 @@
 package com.waridley.chatgame;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
+import com.github.philippheuer.events4j.EventManager;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.helix.domain.User;
@@ -20,6 +21,8 @@ import java.util.Arrays;
 
 public class Launcher {
 	private static String botAcctName;
+	private static StorageInterface storageInterface;
+	private static TwitchClient twitchClient;
 	
 	public static void main(String[] args) {
 		String channelName = args[0];
@@ -31,17 +34,18 @@ public class Launcher {
 		
 		long intervalMinutes = 6;
 		
-		TwitchClient twitchClient = TwitchClientBuilder.builder()
+		twitchClient = TwitchClientBuilder.builder()
+				.withEventManager(new EventManager())
 				.withEnableHelix(true)
 				.withEnableTMI(true)
 				.build();
 		twitchClient.getClientHelper().enableStreamEventListener(channelName);
 		
-		StorageInterface mongoBackend = new MongoBackend(connectionString);
+		storageInterface = new MongoBackend(connectionString);
 		
 		startChatClient(clientId, clientSecret);
 		
-		WatchtimeLogger logger = new WatchtimeLogger(twitchClient, mongoBackend, channelName, ttvCred, intervalMinutes);
+		WatchtimeLogger logger = new WatchtimeLogger(twitchClient, storageInterface, channelName, ttvCred, intervalMinutes);
 		logger.start();
 		
 		//GameClient gameClient = new TwitchChatGameClient(ttvCred);
@@ -54,7 +58,7 @@ public class Launcher {
 		UserList resultList = twitchClient.getHelix().getUsers(null, null, Arrays.asList(botAcctName)).execute();
 		User botAcctUser = resultList.getUsers().get(0);
 		
-		TwitchChatGameClient gameClient = new TwitchChatGameClient(String.valueOf(botAcctUser.getId()), clientId, clientSecret, "waridley");
+		TwitchChatGameClient gameClient = new TwitchChatGameClient(String.valueOf(botAcctUser.getId()), clientId, clientSecret, "waridley", storageInterface, twitchClient);
 		
 	}
 	

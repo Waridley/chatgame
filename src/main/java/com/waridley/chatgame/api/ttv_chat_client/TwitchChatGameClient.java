@@ -9,11 +9,13 @@ import com.github.philippheuer.credentialmanager.CredentialManager;
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.EventManager;
+import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.auth.domain.TwitchScopes;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.TwitchChatBuilder;
 import com.waridley.chatgame.api.GameClient;
+import com.waridley.chatgame.backend.StorageInterface;
 import com.waridley.chatgame.ttv_integration.LocalAuthenticationController;
 
 import java.util.Arrays;
@@ -25,17 +27,22 @@ public class TwitchChatGameClient implements GameClient {
 	private TwitchChat twitchChat;
 	public TwitchChat getTwitchChat() { return twitchChat; }
 	
+	private StorageInterface storageInterface;
+	
 	private EventManager eventManager;
+	private TwitchClient twitchClient;
 	
 	private CredentialManager credentialManager;
 	
 	OAuth2Credential chatCredential;
 	
-	public TwitchChatGameClient(String chatAcctId, String clientId, String clientSecret, String channelName) {
+	public TwitchChatGameClient(String chatAcctId, String clientId, String clientSecret, String channelName, StorageInterface storageInterface, TwitchClient twitchClient) {
 		this.chatAcctId = chatAcctId;
 		this.channelName = channelName;
+		this.storageInterface = storageInterface;
+		this.twitchClient = twitchClient;
 		
-		eventManager = new EventManager();
+		eventManager = twitchClient.getEventManager();
 		
 		LocalAuthenticationController authController = new LocalAuthenticationController(6464, this::buildClient);
 		
@@ -72,7 +79,7 @@ public class TwitchChatGameClient implements GameClient {
 		twitchChat.sendMessage(channelName, "I'm here! TwitchRPG");
 		
 		CommandDispatcher commandDispatcher = new CommandDispatcher(twitchChat.getEventManager());
-		CommandHandler commandHandler = new CommandHandler(twitchChat.getEventManager());
+		CommandHandler commandHandler = new CommandHandler(twitchClient, storageInterface);
 	}
 	
 	public OAuth2Credential getChatCredential() {
