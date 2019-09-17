@@ -1,6 +1,11 @@
+/**
+ * Copyright (c) 2019 Kevin Day
+ * Licensed under the EUPL
+ */
+
 package com.waridley.chatgame.ttv_integration;
 
-import com.waridley.chatgame.Player;
+import com.waridley.chatgame.game.Player;
 
 
 /* TODO:

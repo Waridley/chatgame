@@ -3,8 +3,7 @@
  * Licensed under the EUPL
  */
 
-package com.waridley.chatgame.api;
+package com.waridley.chatgame.game.skills;
 
-public interface Client {
-
+public class Smithing {
 }

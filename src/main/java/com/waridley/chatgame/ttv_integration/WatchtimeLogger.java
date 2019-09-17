@@ -1,17 +1,18 @@
+/**
+ * Copyright (c) 2019 Kevin Day
+ * Licensed under the EUPL
+ */
+
 package com.waridley.chatgame.ttv_integration;
 
+import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.common.events.channel.ChannelGoLiveEvent;
 import com.github.twitch4j.common.events.channel.ChannelGoOfflineEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.Updates;
-import org.bson.Document;
+import com.waridley.chatgame.backend.StorageInterface;
 
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -22,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  *  Implement currency logging
  *  Link Player object to each TwitchUser
  *  Implement blacklist
- *  Methods have been made syncronized, but that doesn't make fields thread-safe
+ *  Methods have been made synchronized, but that doesn't make fields thread-safe
  */
 
 public class WatchtimeLogger {
@@ -30,8 +31,9 @@ public class WatchtimeLogger {
 	private boolean online;
 	
 	private TwitchClient twitchClient;
-	private MongoCollection<TwitchUser> twitchUsersCollection;
+	private StorageInterface storageInterface;
 	private String channelName;
+	private OAuth2Credential botChatCred;
 	
 	private List<TwitchUser> usersInChat;
 	public List<TwitchUser> getUsersInChat() { return usersInChat; }
@@ -42,19 +44,36 @@ public class WatchtimeLogger {
 	public long getInterval() { return interval; }
 	private long lastUpdate;
 	public long getLastUpdate() { return lastUpdate; }
+	private boolean running;
+	
+	//default interval of 10 minutes
+	public WatchtimeLogger (
+			TwitchClient client,
+			StorageInterface storageInterface,
+			String channelName,
+			OAuth2Credential botChatCred) {
+		this(client, storageInterface, channelName, botChatCred, 10);
+	}
 	
 	public WatchtimeLogger (
 			TwitchClient client,
-			MongoCollection<TwitchUser> twitchUsers,
+			StorageInterface storageInterface,
 			String channelName,
+			OAuth2Credential botChatCred,
 			long intervalMinutes) {
 		
 		this.twitchClient = client;
 		
-		this.twitchUsersCollection = twitchUsers;
+		this.storageInterface = storageInterface;
 		this.channelName = channelName;
+		this.botChatCred = botChatCred;
+		this.interval = intervalMinutes;
+		this.loggerTask = new LoggerTask();
+		this.lastUpdate = 0L;
+		this.running = false;
 		
-		List<Stream> resultList = twitchClient.getHelix().getStreams(
+		List<Stream> streams = twitchClient.getHelix().getStreams(
+				botChatCred.getAccessToken(),
 				"",
 				null,
 				1,
@@ -64,46 +83,67 @@ public class WatchtimeLogger {
 				null,
 				Collections.singletonList(channelName)
 		).execute().getStreams();
-		if(resultList.size() > 0) { //channel is streaming?
-			goOnline();
-			System.out.println(channelName + " is streaming! Title: " + resultList.get(0).getTitle());
+		if(streams.size() > 0) { //channel is streaming?
+			Stream stream = streams.get(0);
+			if(stream.getType().equalsIgnoreCase("live")) {
+				goOnline(stream.getTitle(), stream.getGameId());
+			} else {
+				System.out.println("Stream found but type is: " + stream.getType());
+				goOffline();
+			}
 		} else {
 			goOffline();
 		}
 		
-		client.getEventManager().onEvent(ChannelGoLiveEvent.class).subscribe(event -> {
-			if(event.getChannel().getName().equalsIgnoreCase(channelName)) {
-				goOnline();
-				System.out.println("Logging in online mode");
-			}
-		});
-		client.getEventManager().onEvent(ChannelGoOfflineEvent.class).subscribe(event -> {
-			if(event.getChannel().getName().equalsIgnoreCase(channelName)) {
-				goOffline();
-				System.out.println("Logging in offline mode");
-			}
-		});
-		
-		loggerTask = new LoggerTask();
-		lastUpdate = 0;
-		try {
-			setInterval(intervalMinutes);
-			System.out.println("Interval set to " + this.getInterval());
-		} catch(InterruptedException e) {
-			e.printStackTrace();
-		}
+		client.getEventManager().onEvent(ChannelGoLiveEvent.class).subscribe(event -> goOnline(event.getTitle(), event.getGameId()));
+		client.getEventManager().onEvent(ChannelGoOfflineEvent.class).subscribe(event -> goOffline());
 		
 	}
 	
-	public synchronized void setInterval(long minutes) throws InterruptedException {
-		this.interval = minutes;
-		if(scheduler != null) {
-			scheduler.shutdown();
-			scheduler.awaitTermination(30L, TimeUnit.SECONDS);
+	public boolean start() {
+		boolean started = false;
+		if(!running) {
+			if(scheduler != null) {
+				try {
+					scheduler.shutdown();
+					scheduler.awaitTermination(30L, TimeUnit.SECONDS);
+				} catch(InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			scheduler = Executors.newSingleThreadScheduledExecutor();
+			scheduler.scheduleAtFixedRate(loggerTask, 0L, this.interval, TimeUnit.MINUTES);
+			started = true;
+			running = true;
+		} else {
+			System.err.println("Already running!");
 		}
-		scheduler = Executors.newSingleThreadScheduledExecutor();
-		System.out.println("Scheduler created");
-		scheduler.scheduleAtFixedRate(loggerTask, 0L, this.interval, TimeUnit.MINUTES);
+		return started;
+	}
+	
+	public void stop() {
+		if(running) {
+			if(scheduler != null) {
+				try {
+					scheduler.shutdown();
+					scheduler.awaitTermination(30L, TimeUnit.SECONDS);
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
+			} else {
+				System.err.println("Running is true, but scheduler is null!");
+			}
+		} else {
+			System.out.println("Already stopped!");
+		}
+	}
+	
+	public synchronized void setInterval(long minutes) {
+		this.interval = minutes;
+		if(running) {
+			stop();
+			start();
+		}
 	}
 	
 	private synchronized void updateChatters() throws RateLimitException {
@@ -121,28 +161,7 @@ public class WatchtimeLogger {
 			).execute();
 			
 			for(User user : chatters.getUsers()) {
-				
-				
-				TwitchUser twitchUser = twitchUsersCollection.findOneAndUpdate(
-					Filters.eq(
-							"userid",
-							user.getId()
-					),
-					Updates.combine(
-						new Document(
-							"$setOnInsert",
-							new Document("userid", user.getId())
-								.append("onlineMinutes", 0L)
-								.append("offlineMinutes", 0L)
-						),
-						new Document(
-							"$set",
-							new Document("login", user.getLogin())
-						)
-					),
-					new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-				);
-				usersInChat.add(twitchUser);
+				usersInChat.add(storageInterface.findOrCreateTwitchUser(user));
 			}
 			
 			lastUpdate = new Date().getTime();
@@ -152,27 +171,8 @@ public class WatchtimeLogger {
 		}
 	}
 	
-	
 	private synchronized TwitchUser logMinutes(TwitchUser user, long minutes) {
-		String status;
-		long currentMinutes;
-		
-		if(online) {
-			status = "online";
-			currentMinutes = user.getOnlineMinutes();
-		} else {
-			status = "offline";
-			currentMinutes = user.getOfflineMinutes();
-		}
-		
-		
-		TwitchUser updatedUser = twitchUsersCollection.findOneAndUpdate(
-				Filters.eq("userid", user.getUserId()),
-				new Document("$set", new Document()
-						.append(status + "Minutes", currentMinutes + minutes)),
-				new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-		);
-		
+		TwitchUser updatedUser = storageInterface.logMinutes(user, minutes, online);
 		return updatedUser;
 	}
 	
@@ -183,13 +183,14 @@ public class WatchtimeLogger {
 		}
 	}
 	
-	public synchronized void goOnline() {
+	public synchronized void goOnline(String title, long gameId) {
 		online = true;
+		System.out.println(channelName + " is streaming! Title: " + title);
 	}
 	
 	public synchronized void goOffline() {
 		online = false;
-		
+		System.out.println(channelName + " is offline.");
 	}
 	
 	private class LoggerTask implements Runnable {
@@ -207,7 +208,6 @@ public class WatchtimeLogger {
 			} catch(RateLimitException e) {
 				e.printStackTrace();
 			}
-			
 		}
 	}
 	
