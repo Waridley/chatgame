@@ -16,9 +16,12 @@ import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.TwitchChatBuilder;
 import com.waridley.chatgame.api.GameClient;
 import com.waridley.chatgame.backend.StorageInterface;
+import com.waridley.chatgame.backend.mongo.AdminCredential;
+import com.waridley.chatgame.backend.mongo.StorableOAuth2Credential;
 import com.waridley.chatgame.ttv_integration.ReflexiveAuthenticationController;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 public class TwitchChatGameClient implements GameClient {
 	private String channelName;
@@ -32,11 +35,13 @@ public class TwitchChatGameClient implements GameClient {
 	private TwitchClient twitchClient;
 	
 	private CredentialManager credentialManager;
+	TwitchIdentityProvider identityProvider;
 	
 	public TwitchChatGameClient(TwitchIdentityProvider provider, String channelName, StorageInterface storageInterface, TwitchClient twitchClient) {
 		this.channelName = channelName;
 		this.storageInterface = storageInterface;
 		this.twitchClient = twitchClient;
+		this.identityProvider = provider;
 		
 		eventManager = twitchClient.getEventManager();
 		
@@ -47,7 +52,15 @@ public class TwitchChatGameClient implements GameClient {
 				.build();
 		authController.setCredentialManager(credentialManager);
 		credentialManager.registerIdentityProvider(provider);
-		credentialManager.getAuthenticationController().startOAuth2AuthorizationCodeGrantType(
+		
+		Optional<AdminCredential> botCredential = storageInterface.loadAdminCredential("botCredential");
+		if(botCredential.isPresent()) {
+			botCredential.get().setCredential(
+					new StorableOAuth2Credential(provider.getAdditionalCredentialInformation(botCredential.get().getCredential().toOAuth2Credential()).get()));
+			System.out.println("Found bot credential for " + botCredential.get().getCredential().toOAuth2Credential().getUserName());
+			buildClient(botCredential.get().getCredential().toOAuth2Credential());
+		} else {
+			credentialManager.getAuthenticationController().startOAuth2AuthorizationCodeGrantType(
 				provider,
 				"http://localhost:6464",
 				Arrays.asList(new TwitchScopes[]{
@@ -57,10 +70,14 @@ public class TwitchChatGameClient implements GameClient {
 						TwitchScopes.CHAT_WHISPERS_EDIT,
 						TwitchScopes.CHAT_WHISPERS_READ
 				}));
+		}
 		
 	}
 	
 	private void buildClient(OAuth2Credential credential) {
+		credential = identityProvider.getAdditionalCredentialInformation(credential).get();
+		storageInterface.saveAdminCredential("botCredential", credential);
+		System.out.println("Saved bot credential for " + credential.getUserName());
 		twitchChat = TwitchChatBuilder.builder()
 				.withEventManager(eventManager)
 				.withCredentialManager(credentialManager)

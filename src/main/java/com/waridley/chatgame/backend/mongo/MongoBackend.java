@@ -5,6 +5,9 @@
 
 package com.waridley.chatgame.backend.mongo;
 
+import com.github.philippheuer.credentialmanager.api.IStorageBackend;
+import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
+import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.helix.TwitchHelix;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
@@ -26,11 +29,9 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.Convention;
 import org.bson.codecs.pojo.Conventions;
 import org.bson.codecs.pojo.PojoCodecProvider;
+import sun.plugin2.uitoolkit.impl.awt.OldPluginAWTUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
@@ -38,9 +39,12 @@ import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
 public class MongoBackend implements StorageInterface {
 	
 	private MongoCollection<TwitchUser> twitchUsersCollection;
+	private MongoCollection<AdminCredential> adminCollection;
 	private TwitchHelix helix;
 	
-	public MongoBackend(ConnectionString connectionString, TwitchHelix helix) {
+	private MongoCredStorageBackend credStorageBackend;
+	
+	public MongoBackend(ConnectionString connectionString, TwitchHelix helix, TwitchIdentityProvider provider) {
 		this.helix = helix;
 		MongoClientSettings settings = MongoClientSettings.builder()
 				.applyConnectionString(connectionString)
@@ -57,14 +61,40 @@ public class MongoBackend implements StorageInterface {
 				.register(User.class)
 				.register(TwitchUser.class)
 				.register(Player.class)
+				.register(StorableOAuth2Credential.class)
+				.register(MongoCredStorageBackend.CredentialWrapper.class)
+				.register(AdminCredential.class)
 				.build();
 		CodecRegistry pojoCodecRegistry = fromRegistries(
 				com.mongodb.MongoClient.getDefaultCodecRegistry(),
-				
 				fromProviders(codecProvider)
 		);
-		twitchUsersCollection = db.getCollection("twitch_users", TwitchUser.class).withCodecRegistry(pojoCodecRegistry);
 		
+		twitchUsersCollection = db.getCollection("twitch_users", TwitchUser.class).withCodecRegistry(pojoCodecRegistry);
+		adminCollection = db.getCollection("admin", AdminCredential.class).withCodecRegistry(pojoCodecRegistry);
+		MongoCollection<OAuth2Credential> clientCredentialCollection =  db.getCollection("credentials", OAuth2Credential.class).withCodecRegistry(pojoCodecRegistry);
+		this.credStorageBackend = new MongoCredStorageBackend(clientCredentialCollection, provider);
+		
+	}
+	
+	@Override
+	public IStorageBackend getCredentialStorageBackend() {
+		return credStorageBackend;
+	}
+	
+	@Override
+	public Optional<AdminCredential> loadAdminCredential(String name) {
+		return Optional.ofNullable(adminCollection.find(Filters.eq("name", name)).first());
+	}
+	
+	@Override
+	public void saveAdminCredential(String name, OAuth2Credential credential) {
+		StorableOAuth2Credential storableCred = new StorableOAuth2Credential(credential);
+		adminCollection.findOneAndUpdate(
+				Filters.eq("name", name),
+				new Document("$set", new Document("credential", storableCred)),
+				new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+		);
 	}
 	
 	@Override
@@ -144,5 +174,6 @@ public class MongoBackend implements StorageInterface {
 		
 		return updatedUser;
 	}
+	
 	
 }

@@ -23,6 +23,10 @@ import java.util.Arrays;
 public class Launcher {
 	
 	public static void main(String[] args) {
+		launch(args);
+	}
+	
+	public static void launch(String[] args) {
 		String channelName = args[0];
 		String botAcctName = args[1];
 		TwitchIdentityProvider idProvider = new TwitchIdentityProvider(args[2], args[3], "http://localhost:6464");
@@ -38,7 +42,7 @@ public class Launcher {
 				.build();
 		twitchClient.getClientHelper().enableStreamEventListener(channelName);
 		
-		StorageInterface storageInterface = new MongoBackend(connectionString, twitchClient.getHelix());
+		StorageInterface storageInterface = new MongoBackend(connectionString, twitchClient.getHelix(), idProvider);
 		
 		WatchtimeLogger logger = new WatchtimeLogger(twitchClient, storageInterface, channelName, ttvCred, intervalMinutes);
 		logger.start();
@@ -49,6 +53,4 @@ public class Launcher {
 		TwitchChatGameClient gameClient = new TwitchChatGameClient(idProvider,"waridley", storageInterface, twitchClient);
 		
 	}
-	
-	
 }

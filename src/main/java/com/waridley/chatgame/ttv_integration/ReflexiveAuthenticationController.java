@@ -1,18 +1,32 @@
 package com.waridley.chatgame.ttv_integration;
 
+import com.github.philippheuer.credentialmanager.api.IStorageBackend;
 import com.github.philippheuer.credentialmanager.domain.AuthenticationController;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import javafx.application.Application;
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.stage.Stage;
 
+import javax.security.auth.login.AppConfigurationEntry;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.*;
 import java.util.List;
 
-public class ReflexiveAuthenticationController extends AuthenticationController {
+public class ReflexiveAuthenticationController extends AuthenticationController  {
 	
 	private OAuth2IdentityProvider provider;
 	private TokenHandler tokenHandler;
@@ -62,7 +76,10 @@ public class ReflexiveAuthenticationController extends AuthenticationController 
 		void onReceivedToken(OAuth2Credential token);
 	}
 	
+	
 }
+
+
 class RedirectHandler implements HttpHandler {
 	
 	private String code;
@@ -84,7 +101,16 @@ class RedirectHandler implements HttpHandler {
 	@Override
 	public void handle(HttpExchange exchange) {
 		URI uri = exchange.getRequestURI();
-		String response = "Handling redirect";
+		String response = new StringBuilder()
+				.append("<html>")
+				.append("<head>")
+				.append("</head>")
+				.append("<body>")
+				.append("<h1>Success!</h1>")
+				.append("Received authorization code. Getting token and joining chat.")
+				.append("</body>")
+				.append("</html>")
+				.toString();
 		try {
 			exchange.sendResponseHeaders(200, response.length());
 			exchange.getResponseBody().write(response.getBytes());
@@ -119,4 +145,5 @@ class RedirectHandler implements HttpHandler {
 	interface CodeHandler {
 		void onReceivedCode(String code);
 	}
+	
 }

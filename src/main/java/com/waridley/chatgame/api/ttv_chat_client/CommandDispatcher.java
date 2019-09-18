@@ -8,7 +8,6 @@ package com.waridley.chatgame.api.ttv_chat_client;
 import com.github.philippheuer.events4j.EventManager;
 import com.github.twitch4j.chat.enums.CommandSource;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
-import com.waridley.chatgame.api.ttv_chat_client.CommandEvent;
 
 public class CommandDispatcher {
 	private EventManager eventManager;
