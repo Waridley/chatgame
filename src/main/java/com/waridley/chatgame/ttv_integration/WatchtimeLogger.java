@@ -204,7 +204,7 @@ public class WatchtimeLogger {
 				parent.logAllMinutes(parent.getInterval());
 				System.out.println("Users in chat at " + new Date().toString());
 				for(TwitchUser user : parent.getUsersInChat()) {
-					System.out.println(user.toString());
+					System.out.println(user.getLogin());
 				}
 			} catch(RateLimitException e) {
 				e.printStackTrace();

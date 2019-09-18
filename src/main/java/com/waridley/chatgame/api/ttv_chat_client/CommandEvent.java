@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2019 Kevin Day
+ * Licensed under the EUPL
+ */
+
 package com.waridley.chatgame.api.ttv_chat_client;
 
 import com.github.twitch4j.chat.enums.CommandSource;

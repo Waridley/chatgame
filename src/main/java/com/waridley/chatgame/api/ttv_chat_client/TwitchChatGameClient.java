@@ -16,12 +16,11 @@ import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.TwitchChatBuilder;
 import com.waridley.chatgame.api.GameClient;
 import com.waridley.chatgame.backend.StorageInterface;
-import com.waridley.chatgame.ttv_integration.LocalAuthenticationController;
+import com.waridley.chatgame.ttv_integration.ReflexiveAuthenticationController;
 
 import java.util.Arrays;
 
 public class TwitchChatGameClient implements GameClient {
-	private String chatAcctId;
 	private String channelName;
 	
 	private TwitchChat twitchChat;
@@ -34,23 +33,19 @@ public class TwitchChatGameClient implements GameClient {
 	
 	private CredentialManager credentialManager;
 	
-	OAuth2Credential chatCredential;
-	
-	public TwitchChatGameClient(String chatAcctId, String clientId, String clientSecret, String channelName, StorageInterface storageInterface, TwitchClient twitchClient) {
-		this.chatAcctId = chatAcctId;
+	public TwitchChatGameClient(TwitchIdentityProvider provider, String channelName, StorageInterface storageInterface, TwitchClient twitchClient) {
 		this.channelName = channelName;
 		this.storageInterface = storageInterface;
 		this.twitchClient = twitchClient;
 		
 		eventManager = twitchClient.getEventManager();
 		
-		LocalAuthenticationController authController = new LocalAuthenticationController(6464, this::buildClient);
+		ReflexiveAuthenticationController authController = new ReflexiveAuthenticationController(this::buildClient);
 		
 		credentialManager = CredentialManagerBuilder.builder()
 				.withAuthenticationController(authController)
 				.build();
 		authController.setCredentialManager(credentialManager);
-		TwitchIdentityProvider provider = new TwitchIdentityProvider(clientId, clientSecret, "http://localhost:6464");
 		credentialManager.registerIdentityProvider(provider);
 		credentialManager.getAuthenticationController().startOAuth2AuthorizationCodeGrantType(
 				provider,
@@ -66,7 +61,6 @@ public class TwitchChatGameClient implements GameClient {
 	}
 	
 	private void buildClient(OAuth2Credential credential) {
-		this.chatCredential = credential;
 		twitchChat = TwitchChatBuilder.builder()
 				.withEventManager(eventManager)
 				.withCredentialManager(credentialManager)
@@ -82,7 +76,4 @@ public class TwitchChatGameClient implements GameClient {
 		CommandHandler commandHandler = new CommandHandler(twitchClient, storageInterface);
 	}
 	
-	public OAuth2Credential getChatCredential() {
-		return chatCredential;
-	}
 }

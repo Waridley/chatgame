@@ -10,6 +10,8 @@ import com.waridley.chatgame.ttv_integration.TwitchUser;
 
 public interface StorageInterface {
 	
+	TwitchUser findOrCreateTwitchUser(long ttvUserId) throws TwitchUser.UserNotFoundException;
+	TwitchUser findOrCreateTwitchUser(String s) throws TwitchUser.UserNotFoundException;
 	TwitchUser findOrCreateTwitchUser(User user);
 	
 	TwitchUser logMinutes(TwitchUser user, long minutes, boolean online);

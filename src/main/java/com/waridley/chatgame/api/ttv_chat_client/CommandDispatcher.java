@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2019 Kevin Day
+ * Licensed under the EUPL
+ */
+
 package com.waridley.chatgame.api.ttv_chat_client;
 
 import com.github.philippheuer.events4j.EventManager;
@@ -26,7 +31,7 @@ public class CommandDispatcher {
 			commandLength = message.indexOf(' ');
 			if(commandLength < 1) commandLength = message.length(); //message contains no spaces .: is command with no arguments
 			command = message.substring(0, commandLength);
-			arguments = message.substring(commandLength);
+			arguments = message.substring(commandLength).trim();
 			
 			eventManager.dispatchEvent(new CommandEvent(
 					CommandSource.CHANNEL,

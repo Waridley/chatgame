@@ -5,6 +5,7 @@
 
 package com.waridley.chatgame.ttv_integration;
 
+import com.github.twitch4j.helix.domain.User;
 import com.waridley.chatgame.game.Player;
 
 
@@ -13,13 +14,16 @@ import com.waridley.chatgame.game.Player;
  */
 
 public class TwitchUser {
+	
 	private long userid;
 	public long getUserId() { return userid; }
-	public void setUserid(long id) { userid = id; }
+	public void setUserid(long id) {
+		this.userid = id;
+	}
 	
 	private String login;
 	public String getLogin() { return login; }
-	public void setLogin(String name) { login = name; }
+	public void setLogin(String login) { this.login = login; }
 	
 	private long offlineMinutes;
 	public long getOfflineMinutes() { return offlineMinutes; }
@@ -38,18 +42,22 @@ public class TwitchUser {
 	public Player getGameAcct() { return gameAcct; }
 	public void setGameAcct(Player gameAcct) { this.gameAcct = gameAcct; }
 	
-	@Override
-	public String toString() {
-		return "{\n" +
-				"   \"userid\" : " + userid + ",\n" +
-				"   \"login\" : \"" + login + "\",\n" +
-				"   \"offlineMinutes\" : " + offlineMinutes + ",\n" +
-				"   \"onlineMinutes\" : " + onlineMinutes + ",\n" +
-				"   \"totalMinutes\" : " + getTotalMinutes() + ",\n" +
-				"}";
+	private User helixUser;
+	public User getHelixUser() { return helixUser; }
+	public void setHelixUser(User helixUser) {
+		this.helixUser = helixUser;
+		userid = helixUser.getId();
 	}
 	
-	public double toHours(long mintues) {
+	public static double toHours(long mintues) {
 		return ((double) mintues) / 60.0;
+	}
+	
+	public static class UserNotFoundException extends Exception {
+		
+		public UserNotFoundException(String message, Throwable e) {
+			super(message, e);
+		}
+		
 	}
 }

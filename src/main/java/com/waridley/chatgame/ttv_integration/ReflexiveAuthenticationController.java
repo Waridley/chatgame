@@ -1,7 +1,6 @@
 package com.waridley.chatgame.ttv_integration;
 
 import com.github.philippheuer.credentialmanager.domain.AuthenticationController;
-import com.github.philippheuer.credentialmanager.domain.Credential;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider;
 import com.sun.net.httpserver.HttpExchange;
@@ -10,33 +9,35 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.awt.Desktop;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.*;
 import java.util.List;
 
-public class LocalAuthenticationController extends AuthenticationController {
+public class ReflexiveAuthenticationController extends AuthenticationController {
 	
 	private OAuth2IdentityProvider provider;
-	private int port;
 	private TokenHandler tokenHandler;
 	
-	public LocalAuthenticationController(int port, TokenHandler tokenHandler) {
+	public ReflexiveAuthenticationController(TokenHandler tokenHandler) {
 		super();
-		this.port = port;
 		this.tokenHandler = tokenHandler;
 	}
 	
 	@Override
-	public void startOAuth2AuthorizationCodeGrantType(OAuth2IdentityProvider oAuth2IdentityProvider, String redirectUrl, List<Object> scopes) {
-		this.provider = oAuth2IdentityProvider;
-		String authenticationUrl = provider.getAuthenticationUrl(redirectUrl, scopes, null).replace(' ', '+');
+	public void startOAuth2AuthorizationCodeGrantType(OAuth2IdentityProvider provider, String redirectUrl, List<Object> scopes) {
+		this.provider = provider;
+		String authenticationUrl = this.provider.getAuthenticationUrl(redirectUrl, scopes, null);
 		
 		if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 			try {
-				Desktop.getDesktop().browse(new URI(authenticationUrl));
-				HttpServer server = HttpServer.create(new InetSocketAddress(6464), 0);
-				RedirectHandler handler = new RedirectHandler(this::getOAuth2Token);
-				server.createContext("/", handler);
+				Desktop.getDesktop().browse(new URI(authenticationUrl.replace(' ', '+')));
+				URI listenURI = new URI(redirectUrl);
+				int port = listenURI.getPort();
+				if(port < 0) port = 80;
+				String path = listenURI.getPath();
+				if(path == null || path.equals("")) path = "/";
+				HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+				RedirectHandler handler = new RedirectHandler(this::onReceivedCode);
+				server.createContext(path, handler);
 				server.setExecutor(null);
 				server.start();
 			} catch(IOException e) {
@@ -49,7 +50,7 @@ public class LocalAuthenticationController extends AuthenticationController {
 		}
 	}
 	
-	public void getOAuth2Token(String code) {
+	private void onReceivedCode(String code) {
 		//System.out.println("Received code " + code + " -- Getting token");
 		OAuth2Credential cred = provider.getCredentialByCode(code);
 		//System.out.println("Token: " + cred.getAccessToken());
@@ -65,8 +66,6 @@ public class LocalAuthenticationController extends AuthenticationController {
 class RedirectHandler implements HttpHandler {
 	
 	private String code;
-	
-	
 	public String getCode() { return code; }
 	
 	private String[] scopes;
@@ -75,10 +74,11 @@ class RedirectHandler implements HttpHandler {
 	private String state;
 	public String getState() { return state; }
 	
-	private TokenRetriever tokenRetriever;
+	private CodeHandler codeHandler;
 	
-	public RedirectHandler(TokenRetriever tokenRetriever) {
-		this.tokenRetriever = tokenRetriever;
+	public RedirectHandler(CodeHandler codeHandler) {
+		
+		this.codeHandler = codeHandler;
 	}
 	
 	@Override
@@ -113,10 +113,10 @@ class RedirectHandler implements HttpHandler {
 					System.err.println("Unknown field in response");
 			}
 		}
-		tokenRetriever.getToken(code);
+		codeHandler.onReceivedCode(code);
 	}
 	
-	interface TokenRetriever {
-		void getToken(String code);
+	interface CodeHandler {
+		void onReceivedCode(String code);
 	}
 }
