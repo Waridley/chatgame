@@ -5,7 +5,13 @@ plugins {
 group 'waridley'
 version '0.1'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.9
+
+project.ext {
+    groupId = 'com.waridley.chatgame'
+    artifactNamespace = 'chatgame'
+    artifactName = 'ChatGame'
+}
 
 repositories {
     mavenCentral()
@@ -22,5 +28,4 @@ dependencies {
 
     //Twitch API library
     compile 'com.github.twitch4j:twitch4j:1.0.0-alpha.16'
-
 }

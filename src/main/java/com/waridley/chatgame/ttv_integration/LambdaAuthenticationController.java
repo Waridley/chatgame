@@ -1,37 +1,25 @@
 package com.waridley.chatgame.ttv_integration;
 
-import com.github.philippheuer.credentialmanager.api.IStorageBackend;
 import com.github.philippheuer.credentialmanager.domain.AuthenticationController;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import javafx.application.Application;
-import javafx.geometry.HPos;
-import javafx.geometry.VPos;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.paint.Color;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
-import javafx.stage.Stage;
 
-import javax.security.auth.login.AppConfigurationEntry;
 import java.awt.Desktop;
 import java.io.IOException;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
-public class ReflexiveAuthenticationController extends AuthenticationController  {
+public class LambdaAuthenticationController extends AuthenticationController  {
 	
 	private OAuth2IdentityProvider provider;
 	private TokenHandler tokenHandler;
 	
-	public ReflexiveAuthenticationController(TokenHandler tokenHandler) {
+	public LambdaAuthenticationController(TokenHandler tokenHandler) {
 		super();
 		this.tokenHandler = tokenHandler;
 	}

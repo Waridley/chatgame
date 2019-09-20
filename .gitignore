@@ -51,3 +51,7 @@ client.log
 
 # Visual Studio Code
 .vscode/
+
+#Temporary resources
+/src/test/resources/20-09-2019-alltime-points.csv
+/src/test/java/com/waridley/chatgame/tests/PointsImporter.java

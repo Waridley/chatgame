@@ -12,9 +12,12 @@ import com.github.twitch4j.common.events.channel.ChannelGoOfflineEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
-import com.waridley.chatgame.backend.StorageInterface;
+import com.waridley.chatgame.backend.twitch.TwitchStorageInterface;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +35,7 @@ public class WatchtimeLogger {
 	private boolean online;
 	
 	private TwitchClient twitchClient;
-	private StorageInterface storageInterface;
+	private TwitchStorageInterface storageInterface;
 	private String channelName;
 	private OAuth2Credential botChatCred;
 	
@@ -50,7 +53,7 @@ public class WatchtimeLogger {
 	//default interval of 10 minutes
 	public WatchtimeLogger (
 			TwitchClient client,
-			StorageInterface storageInterface,
+			TwitchStorageInterface storageInterface,
 			String channelName,
 			OAuth2Credential botChatCred) {
 		this(client, storageInterface, channelName, botChatCred, 10);
@@ -58,7 +61,7 @@ public class WatchtimeLogger {
 	
 	public WatchtimeLogger (
 			TwitchClient client,
-			StorageInterface storageInterface,
+			TwitchStorageInterface storageInterface,
 			String channelName,
 			OAuth2Credential botChatCred,
 			long intervalMinutes) {
@@ -147,7 +150,7 @@ public class WatchtimeLogger {
 		}
 	}
 	
-	private synchronized void updateChatters() throws RateLimitException {
+	private synchronized void updateChatters() {
 		//Update no more often than 30 seconds
 		if(new Date().getTime() - getLastUpdate() >= 30 * 1000) {
 			usersInChat = new ArrayList<>();
@@ -168,7 +171,7 @@ public class WatchtimeLogger {
 			lastUpdate = new Date().getTime();
 			
 		} else {
-			throw new RateLimitException("Chatters updated <30s ago at " + lastUpdate);
+			throw new RuntimeException("Attempting to update chatters less than 30s after " + lastUpdate);
 		}
 	}
 	
@@ -199,29 +202,13 @@ public class WatchtimeLogger {
 		
 		@Override
 		public void run() {
-			try {
-				parent.updateChatters();
-				parent.logAllMinutes(parent.getInterval());
-				System.out.println("Users in chat at " + new Date().toString());
-				for(TwitchUser user : parent.getUsersInChat()) {
-					System.out.println(user.getLogin());
-				}
-			} catch(RateLimitException e) {
-				e.printStackTrace();
+			parent.updateChatters();
+			parent.logAllMinutes(parent.getInterval());
+			System.out.println("Users in chat at " + new Date().toString());
+			for(TwitchUser user : parent.getUsersInChat()) {
+				System.out.println(user.getLogin());
 			}
 		}
-	}
-	
-	public static class RateLimitException extends Exception {
-		
-		public RateLimitException() {
-			super();
-		}
-		
-		public RateLimitException(String message) {
-			super(message);
-		}
-		
 	}
 	
 }

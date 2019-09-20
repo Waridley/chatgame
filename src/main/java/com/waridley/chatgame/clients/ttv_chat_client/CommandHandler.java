@@ -3,13 +3,13 @@
  * Licensed under the EUPL
  */
 
-package com.waridley.chatgame.api.ttv_chat_client;
+package com.waridley.chatgame.clients.ttv_chat_client;
 
 import com.github.philippheuer.events4j.EventManager;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.chat.events.channel.ChannelLeaveEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
-import com.waridley.chatgame.backend.StorageInterface;
+import com.waridley.chatgame.backend.twitch.TwitchStorageInterface;
 import com.waridley.chatgame.ttv_integration.TwitchUser;
 
 import java.util.Optional;
@@ -17,9 +17,9 @@ import java.util.Optional;
 public class CommandHandler {
 	private TwitchClient twitchClient;
 	private EventManager eventManager;
-	private StorageInterface storageInterface;
+	private TwitchStorageInterface storageInterface;
 	
-	public CommandHandler(TwitchClient twitchClient, StorageInterface storageInterface) {
+	public CommandHandler(TwitchClient twitchClient, TwitchStorageInterface storageInterface) {
 		this.twitchClient = twitchClient;
 		this.eventManager = twitchClient.getEventManager();
 		this.eventManager.onEvent(CommandEvent.class).subscribe(this::onCommand);

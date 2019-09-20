@@ -1,17 +1,21 @@
+/**
+ * Copyright (c) 2019 Kevin Day
+ * Licensed under the EUPL
+ */
+
 package com.waridley.chatgame.backend.mongo;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 
-public class AdminCredential {
+public class NamedCredential {
 	
 	private String name;
-	
 	public String getName() { return name; }
 	public void setName(String name) { this.name = name; }
 	
-	private StorableOAuth2Credential credential;
-	public StorableOAuth2Credential getCredential() { return credential; }
-	public void setCredential(StorableOAuth2Credential credential) { this.credential = credential; }
+	private OAuth2Credential credential;
+	public OAuth2Credential getCredential() { return credential; }
+	public void setCredential(OAuth2Credential credential) { this.credential = credential; }
 	/*
 	
 	public AdminCredential(String name, OAuth2Credential credential) {
