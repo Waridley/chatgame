@@ -3,26 +3,17 @@
  * Licensed under the EUPL
  */
 
-package com.waridley.chatgame.backend.mongo.twitch;
+package com.waridley.chatgame.backend.mongo;
 
-import com.github.philippheuer.credentialmanager.api.IStorageBackend;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
-import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.helix.TwitchHelix;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
 import com.mongodb.client.*;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.Updates;
-import com.waridley.chatgame.backend.mongo.MongoCredStorageBackend;
-import com.waridley.chatgame.backend.mongo.NamedCredential;
-import com.waridley.chatgame.backend.mongo.game.PlayerCodec;
-import com.waridley.chatgame.backend.mongo.twitch.OAuth2Codec;
-import com.waridley.chatgame.backend.twitch.TwitchStorageInterface;
+import com.mongodb.client.model.*;
+import com.waridley.chatgame.backend.NamedOAuth2Credential;
+import com.waridley.chatgame.backend.mongo.codecs.OAuth2Codec;
+import com.waridley.chatgame.backend.TwitchStorageInterface;
 import com.waridley.chatgame.game.Player;
 import com.waridley.chatgame.ttv_integration.TwitchUser;
 import org.bson.Document;
@@ -36,18 +27,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-//TODO: import single methods
-import static org.bson.codecs.configuration.CodecRegistries.*;
+import org.bson.codecs.configuration.CodecRegistries;
 
 public class MongoTwitchBackend implements TwitchStorageInterface {
 	
 	private MongoCollection<TwitchUser> twitchUsersCollection;
-	private MongoCollection<NamedCredential> adminCollection;
+	private MongoCollection<NamedOAuth2Credential> adminCollection;
 	private TwitchHelix helix;
 	
-	private MongoCredStorageBackend credStorageBackend;
+	//private MongoCredStorageBackend credStorageBackend;
 	
-	public MongoTwitchBackend(MongoDatabase db, TwitchHelix helix, TwitchIdentityProvider provider) {
+	public MongoTwitchBackend(
+			MongoDatabase db
+			, TwitchHelix helix
+			//, TwitchIdentityProvider provider
+			) {
 		this.helix = helix;
 		
 		List<Convention> conventions = new ArrayList<>(Conventions.DEFAULT_CONVENTIONS);
@@ -57,37 +51,45 @@ public class MongoTwitchBackend implements TwitchStorageInterface {
 				.conventions(conventions)
 				.register(User.class)
 				.register(TwitchUser.class)
-				//.register(Player.class)
-				//.register(OAuth2Codec.class)
-				.register(MongoCredStorageBackend.CredentialWrapper.class)
-				.register(NamedCredential.class)
+				.register(NamedOAuth2Credential.class)
 				.build();
-		CodecRegistry codecRegistry = fromRegistries(
+		CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
 				com.mongodb.MongoClient.getDefaultCodecRegistry(),
-				fromCodecs(new OAuth2Codec()),
-				//fromCodecs(new PlayerCodec(this)),
-				fromProviders(pojoCodecProvider)
+				CodecRegistries.fromCodecs(new OAuth2Codec()),
+				CodecRegistries.fromProviders(pojoCodecProvider)
 		);
 		
+		if(!collectionExists(db, "twitch_users")) db.createCollection("twitch_users");
 		twitchUsersCollection = db.getCollection("twitch_users", TwitchUser.class).withCodecRegistry(codecRegistry);
-		adminCollection = db.getCollection("admin", NamedCredential.class).withCodecRegistry(codecRegistry);
-		MongoCollection<OAuth2Credential> clientCredentialCollection =  db.getCollection("credentials", OAuth2Credential.class).withCodecRegistry(codecRegistry);
-		this.credStorageBackend = new MongoCredStorageBackend(clientCredentialCollection, provider);
+		if(!collectionExists(db, "admin")) db.createCollection("admin");
+		adminCollection = db.getCollection("admin", NamedOAuth2Credential.class).withCodecRegistry(codecRegistry);
+		//MongoCollection<OAuth2Credential> clientCredentialCollection =  db.getCollection("credentials", OAuth2Credential.class).withCodecRegistry(codecRegistry);
+		//this.credStorageBackend = new MongoCredStorageBackend(clientCredentialCollection, provider);
 		
 	}
 	
-	@Override
-	public IStorageBackend getCredentialStorageBackend() {
-		return credStorageBackend;
+	private boolean collectionExists(MongoDatabase db, String collectionName) {
+		boolean collectionExists = false;
+		for(String name : db.listCollectionNames()) {
+			if(name.equals(collectionName)) collectionExists = true;
+		}
+		return collectionExists;
 	}
 	
+	/*@Override
+	public IStorageBackend getCredentialStorageBackend() {
+		return credStorageBackend;
+	}*/
+	
 	@Override
-	public Optional<NamedCredential> loadNamedCredential(String name) {
+	@Deprecated
+	public Optional<NamedOAuth2Credential> loadNamedCredential(String name) {
 		return Optional.ofNullable(adminCollection.find(Filters.eq("name", name)).first());
 	}
 	
 	@Override
-	public void saveAdminCredential(String name, OAuth2Credential credential) {
+	@Deprecated
+	public void saveNamedCredential(String name, OAuth2Credential credential) {
 		//OAuth2Codec storableCred = new OAuth2Codec(credential);
 		adminCollection.findOneAndUpdate(
 				Filters.eq("name", name),
@@ -128,10 +130,7 @@ public class MongoTwitchBackend implements TwitchStorageInterface {
 	public TwitchUser findOrCreateTwitchUser(User user) {
 		
 		TwitchUser twitchUser = twitchUsersCollection.findOneAndUpdate(
-				Filters.eq(
-						"userid",
-						user.getId()
-				),
+				Filters.eq("userid", user.getId()),
 				Updates.combine(
 						new Document(
 								"$setOnInsert",
@@ -150,26 +149,22 @@ public class MongoTwitchBackend implements TwitchStorageInterface {
 		
 		assert twitchUser != null;
 		if(twitchUser.getPlayerId() == null) {
+			System.out.println("Creating player for Twitch user " + twitchUser.getHelixUser().getDisplayName());
 			Player player = new Player(twitchUser);
+			System.out.println("Created player " + player.getUsername());
 			//TODO: Save player to GameStorageInterface
 			twitchUser.setPlayerId(player.getObjectId());
-			twitchUser = twitchUsersCollection.findOneAndUpdate(
-					Filters.eq(
-							"userid",
-							twitchUser.getUserId()
-					),
-					Updates.combine(
-							new Document("$set", new Document("playerId", player.getObjectId())
-							)
-					),
-					new FindOneAndUpdateOptions().upsert(false).returnDocument(ReturnDocument.AFTER)
+			twitchUsersCollection.updateOne(
+					Filters.eq("userid", twitchUser.getUserId()),
+					new Document("$set", new Document("playerId", twitchUser.getPlayerId())),
+					new UpdateOptions()
 			);
 		}
 		return twitchUser;
 	}
 	
 	@Override
-	public TwitchUser find(User user) throws TwitchUser.UserNotFoundException {
+	public TwitchUser findTwitchuser(User user) throws TwitchUser.UserNotFoundException {
 		TwitchUser result = null;
 		FindIterable<TwitchUser> userIterable = twitchUsersCollection.find(Filters.eq("userid", user.getId()));
 		for(TwitchUser twitchUser : userIterable) {
@@ -181,7 +176,7 @@ public class MongoTwitchBackend implements TwitchStorageInterface {
 	}
 	
 	@Override
-	public TwitchUser find(long ttvUserId) throws TwitchUser.UserNotFoundException {
+	public TwitchUser findTwitchuser(long ttvUserId) throws TwitchUser.UserNotFoundException {
 		UserList chatters = helix.getUsers(
 				null,
 				Collections.singletonList(ttvUserId),
@@ -195,7 +190,7 @@ public class MongoTwitchBackend implements TwitchStorageInterface {
 	}
 	
 	@Override
-	public TwitchUser find(String username) throws TwitchUser.UserNotFoundException {
+	public TwitchUser findTwitchuser(String username) throws TwitchUser.UserNotFoundException {
 		UserList chatters = helix.getUsers(
 				null,
 				null,
@@ -203,7 +198,7 @@ public class MongoTwitchBackend implements TwitchStorageInterface {
 		).execute();
 		for(User user : chatters.getUsers()) {
 			System.out.println("Found Helix user: " + user.getDisplayName());
-			return find(user);
+			return findTwitchuser(user);
 		}
 		throw new TwitchUser.UserNotFoundException("Couldn't find Helix user for " + username);
 	}
@@ -227,6 +222,8 @@ public class MongoTwitchBackend implements TwitchStorageInterface {
 						.append(status + "Minutes", currentMinutes + minutes)),
 				new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
 		);
+		
+		//System.out.println("Logged " + minutes + " minutes for " + updatedUser.getHelixUser().getDisplayName());
 		
 		return updatedUser;
 	}

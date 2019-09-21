@@ -19,12 +19,20 @@ import org.bson.types.ObjectId;
 public class Player {
 	
 	private ObjectId _id = new ObjectId();
-	public ObjectId getObjectId() { return _id; }
-	public void setObjectId(ObjectId id) { this._id = id; }
+	public ObjectId getObjectId() {
+		return _id;
+	}
+	public void setObjectId(ObjectId id) {
+		this._id = id;
+	}
 	
 	private String username = null;
-	public String getUsername() { return username; }
-	public void setUsername(String username) { this.username = username; }
+	public String getUsername() {
+		return username;
+	}
+	public void setUsername(String username) {
+		this.username = username;
+	}
 	
 	private Long twitchUserId = null;
 	public Long getTwitchUserId() { return twitchUserId; }

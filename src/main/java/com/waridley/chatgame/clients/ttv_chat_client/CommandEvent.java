@@ -1,4 +1,10 @@
 /**
+ * Original source Copyright (c) 2018 Philipp Heuer
+ * Licensed under the MIT License
+ * https://github.com/twitch4j/twitch4j/blob/master/chat/src/main/java/com/github/twitch4j/chat/events/CommandEvent.java
+ *
+ * Modifications:
+ *      Separated command from arguments to allow cleaner handling
  * Copyright (c) 2019 Kevin Day
  * Licensed under the EUPL
  */

@@ -12,7 +12,7 @@ import com.github.twitch4j.common.events.channel.ChannelGoOfflineEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
-import com.waridley.chatgame.backend.twitch.TwitchStorageInterface;
+import com.waridley.chatgame.backend.TwitchStorageInterface;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -120,7 +120,7 @@ public class WatchtimeLogger {
 			started = true;
 			running = true;
 		} else {
-			System.err.println("Already running!");
+			System.err.println("WatchtimeLogger already running for " + channelName + "!");
 		}
 		return started;
 	}
@@ -138,7 +138,7 @@ public class WatchtimeLogger {
 				System.err.println("Running is true, but scheduler is null!");
 			}
 		} else {
-			System.out.println("Already stopped!");
+			System.err.println("WatchtimeLogger is already stopped!");
 		}
 	}
 	
@@ -153,7 +153,7 @@ public class WatchtimeLogger {
 	private synchronized void updateChatters() {
 		//Update no more often than 30 seconds
 		if(new Date().getTime() - getLastUpdate() >= 30 * 1000) {
-			usersInChat = new ArrayList<>();
+			List<TwitchUser> tmpUsers = new ArrayList<>();
 			
 			UserList chatters = twitchClient.getHelix().getUsers(
 					null,
@@ -164,10 +164,13 @@ public class WatchtimeLogger {
 							.getAllViewers()
 			).execute();
 			
+			System.out.println("Users in chat at " + new Date().toString());
 			for(User user : chatters.getUsers()) {
-				usersInChat.add(storageInterface.findOrCreateTwitchUser(user));
+				System.out.println("    " + user.getLogin());
+				tmpUsers.add(storageInterface.findOrCreateTwitchUser(user));
 			}
 			
+			this.usersInChat = tmpUsers;
 			lastUpdate = new Date().getTime();
 			
 		} else {
@@ -184,6 +187,7 @@ public class WatchtimeLogger {
 		List<TwitchUser> users = getUsersInChat();
 		for(int i = 0; i < users.size(); i++) {
 			users.set(i, logMinutes(users.get(i), minutes));
+			//System.out.println(users.get(i).getHelixUser().getDisplayName() + " now has " + String.format("%.2f", users.get(i).getTotalHours()) + "h");
 		}
 	}
 	
@@ -202,12 +206,10 @@ public class WatchtimeLogger {
 		
 		@Override
 		public void run() {
+			//System.out.println("Updating chatters");
 			parent.updateChatters();
+			//System.out.println("Logging all minutes");
 			parent.logAllMinutes(parent.getInterval());
-			System.out.println("Users in chat at " + new Date().toString());
-			for(TwitchUser user : parent.getUsersInChat()) {
-				System.out.println(user.getLogin());
-			}
 		}
 	}
 	

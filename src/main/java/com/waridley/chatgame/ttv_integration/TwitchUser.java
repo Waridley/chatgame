@@ -47,7 +47,7 @@ public class TwitchUser {
 	public User getHelixUser() { return helixUser; }
 	public void setHelixUser(User helixUser) {
 		this.helixUser = helixUser;
-		userid = helixUser.getId();
+		setUserid(helixUser.getId());
 	}
 	
 	public static double toHours(long mintues) {

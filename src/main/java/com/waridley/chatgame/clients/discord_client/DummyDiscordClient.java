@@ -5,7 +5,7 @@ import com.github.philippheuer.events4j.EventManager;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.chat.TwitchChat;
-import com.waridley.chatgame.backend.twitch.TwitchStorageInterface;
+import com.waridley.chatgame.backend.TwitchStorageInterface;
 import com.waridley.chatgame.clients.GameClient;
 
 public class DummyDiscordClient implements GameClient {

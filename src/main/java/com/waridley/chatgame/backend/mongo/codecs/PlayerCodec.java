@@ -1,6 +1,5 @@
-package com.waridley.chatgame.backend.mongo.game;
+package com.waridley.chatgame.backend.mongo.codecs;
 
-import com.waridley.chatgame.backend.twitch.TwitchStorageInterface;
 import com.waridley.chatgame.game.Player;
 import com.waridley.chatgame.ttv_integration.TwitchUser;
 import org.bson.BsonReader;
@@ -19,6 +18,7 @@ public class PlayerCodec implements Codec<Player> {
 		String username = null;
 		Long userid = null;
 		TwitchUser twitchUser = null;
+		
 		reader.readStartDocument();
 		while(reader.getCurrentBsonType() != BsonType.END_OF_DOCUMENT) {
 			switch(reader.readName()) {

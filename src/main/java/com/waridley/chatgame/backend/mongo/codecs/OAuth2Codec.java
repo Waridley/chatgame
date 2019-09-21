@@ -1,4 +1,4 @@
-package com.waridley.chatgame.backend.mongo.twitch;
+package com.waridley.chatgame.backend.mongo.codecs;
 
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import org.bson.BsonReader;
@@ -118,7 +118,7 @@ public class OAuth2Codec implements Codec<OAuth2Credential> {
 		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
 			if(reader.getCurrentBsonType() != BsonType.NULL) {
 				String name = reader.readName();
-				switch (reader.getCurrentName()) {
+				switch (name) {
 					case("accessToken"):
 						setAccessToken(reader.readString());
 						break;
@@ -145,6 +145,7 @@ public class OAuth2Codec implements Codec<OAuth2Credential> {
 						break;
 					default:
 						System.err.println("ERROR: Unknown field name when reading OAuth2Credential: " + reader.getCurrentName());
+						reader.skipValue();
 				}
 			}
 		}
@@ -156,23 +157,35 @@ public class OAuth2Codec implements Codec<OAuth2Credential> {
 	@Override
 	public void encode(BsonWriter writer, OAuth2Credential credential, EncoderContext encoderContext) {
 		writer.writeStartDocument();
+		if(credential.getAccessToken() != null) {
 			writer.writeName("accessToken");
-				writer.writeString(credential.getAccessToken());
+			writer.writeString(credential.getAccessToken());
+		}
+		if(credential.getIdentityProvider() != null) {
 			writer.writeName("identityProvider");
-				writer.writeString(credential.getIdentityProvider());
+			writer.writeString(credential.getIdentityProvider());
+		}
+		if(credential.getRefreshToken() != null) {
 			writer.writeName("refreshToken");
-				writer.writeString(credential.getRefreshToken());
+			writer.writeString(credential.getRefreshToken());
+		}
+		if(credential.getScopes() != null) {
 			writer.writeName("scopes");
-				writer.writeStartArray();
-					List<String> scopes = credential.getScopes();
-					for(String scope : scopes) {
-						writer.writeString(scope);
-					}
-				writer.writeEndArray();
+			writer.writeStartArray();
+				List<String> scopes = credential.getScopes();
+				for(String scope : scopes) {
+					writer.writeString(scope);
+				}
+			writer.writeEndArray();
+		}
+		if(credential.getUserId() != null) {
 			writer.writeName("userId");
-				writer.writeString(credential.getUserId());
+			writer.writeString(credential.getUserId());
+		}
+		if(credential.getUserName() != null) {
 			writer.writeName("userName");
-				writer.writeString(credential.getUserName());
+			writer.writeString(credential.getUserName());
+		}
 		writer.writeEndDocument();
 	}
 	

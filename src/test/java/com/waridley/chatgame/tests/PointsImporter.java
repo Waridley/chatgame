@@ -1,5 +1,6 @@
 package com.waridley.chatgame.tests;
 
+import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.helix.TwitchHelix;
 import com.mongodb.ConnectionString;
@@ -7,8 +8,8 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.waridley.chatgame.backend.twitch.TwitchStorageInterface;
-import com.waridley.chatgame.backend.mongo.twitch.MongoTwitchBackend;
+import com.waridley.chatgame.backend.TwitchStorageInterface;
+import com.waridley.chatgame.backend.mongo.MongoTwitchBackend;
 import com.waridley.chatgame.ttv_integration.TwitchUser;
 
 import java.io.BufferedReader;
@@ -24,7 +25,7 @@ public class PointsImporter {
 	private TwitchIdentityProvider identityProvider;
 	
 	public static void main(String[] args) throws IOException {
-		/*ConnectionString connString = new ConnectionString(args[0]);
+		ConnectionString connString = new ConnectionString(args[0]);
 		TwitchHelix helix = TwitchClientBuilder.builder().withEnableHelix(true).build().getHelix();
 		TwitchIdentityProvider provider = new TwitchIdentityProvider("id", "secret", "localhost");
 		
@@ -32,7 +33,7 @@ public class PointsImporter {
 		
 		File file = pi.getFileFromResources("phazon.csv");
 		
-		pi.importPoints(file);*/
+		pi.importPoints(file);
 	}
 	
 	public PointsImporter(ConnectionString connectionString, TwitchHelix helix, TwitchIdentityProvider identityProvider) {
@@ -68,7 +69,7 @@ public class PointsImporter {
 		MongoDatabase db = mongoClient.getDatabase("chatgame");
 		
 		
-		TwitchStorageInterface storageInterface = new MongoTwitchBackend(db, helix, identityProvider);
+		TwitchStorageInterface storageInterface = new MongoTwitchBackend(db, helix);
 		
 		String line;
 		TwitchUser currentUser;
@@ -84,9 +85,10 @@ public class PointsImporter {
 				currentUser = storageInterface.findOrCreateTwitchUser(username);
 				System.out.println(currentUser.getLogin() +
 						" currently has " + currentUser.getOnlineMinutes() + " minutes. " +
-						"Adding " + String.valueOf(points));
+						"Would add " + String.valueOf(points));
 				
-				storageInterface.logMinutes(currentUser, points, true);
+				//Only uncomment this line when ready to actually add points
+				//storageInterface.logMinutes(currentUser, points, true);
 				
 			} catch(TwitchUser.UserNotFoundException e) {
 				System.err.println("Didn't find user " + username);

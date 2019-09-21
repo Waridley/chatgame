@@ -7,6 +7,8 @@ package com.waridley.chatgame.clients.ttv_chat_client;
 
 import com.github.philippheuer.credentialmanager.CredentialManager;
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
+import com.github.philippheuer.credentialmanager.api.IStorageBackend;
+import com.github.philippheuer.credentialmanager.domain.Credential;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.EventManager;
 import com.github.twitch4j.TwitchClient;
@@ -14,13 +16,11 @@ import com.github.twitch4j.auth.domain.TwitchScopes;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.chat.TwitchChat;
 import com.github.twitch4j.chat.TwitchChatBuilder;
-import com.waridley.chatgame.backend.twitch.TwitchStorageInterface;
-import com.waridley.chatgame.backend.mongo.NamedCredential;
+import com.waridley.chatgame.backend.NamedOAuth2Credential;
+import com.waridley.chatgame.backend.TwitchStorageInterface;
 import com.waridley.chatgame.clients.GameClient;
-import com.waridley.chatgame.ttv_integration.LambdaAuthenticationController;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 public class TwitchChatGameClient implements GameClient {
 	private String channelName;
@@ -28,65 +28,58 @@ public class TwitchChatGameClient implements GameClient {
 	private TwitchChat twitchChat;
 	public TwitchChat getTwitchChat() { return twitchChat; }
 	
-	private TwitchStorageInterface storageInterface;
+	private IStorageBackend credentialStorage;
+	private TwitchStorageInterface twitchStorage;
 	
 	private EventManager eventManager;
 	private TwitchClient twitchClient;
 	
 	private CredentialManager credentialManager;
-	TwitchIdentityProvider identityProvider;
+	private TwitchIdentityProvider identityProvider;
 	
 	public TwitchChatGameClient(
 			TwitchIdentityProvider provider,
 			String channelName,
-			TwitchStorageInterface storageInterface,
+			IStorageBackend credentialStorage,
+			TwitchStorageInterface twitchStorageInterface,
 			TwitchClient twitchClient) {
 		
 		this.channelName = channelName;
-		this.storageInterface = storageInterface;
+		this.credentialStorage = credentialStorage;
+		this.twitchStorage = twitchStorageInterface;
 		this.twitchClient = twitchClient;
 		this.identityProvider = provider;
+		this.eventManager = twitchClient.getEventManager();
 		
-	}
-	
-	private void buildClient(OAuth2Credential credential) {
-		Optional<OAuth2Credential> enrichedCred = identityProvider.getAdditionalCredentialInformation(credential);
-		if(enrichedCred.isPresent()) { credential = enrichedCred.get(); }
-		storageInterface.saveAdminCredential("botCredential", credential);
-		System.out.println("Saved bot credential for " + credential.getUserName());
-		twitchChat = TwitchChatBuilder.builder()
-				.withEventManager(eventManager)
-				.withCredentialManager(credentialManager)
-				.withChatAccount(credential)
-				.build();
-		System.out.println("Built TwitchChat");
-		twitchChat.joinChannel(channelName);
-		System.out.println("Joined channel:" + channelName);
-		twitchChat.sendMessage(channelName, "I'm here! TwitchRPG");
-		
-		CommandDispatcher commandDispatcher = new CommandDispatcher(twitchChat.getEventManager());
-		CommandHandler commandHandler = new CommandHandler(twitchClient, storageInterface);
 	}
 	
 	public void start() {
 		System.out.println("Starting Twitch Chat Game Client");
-		eventManager = twitchClient.getEventManager();
+		waitForCredential();
+	}
+	
+	private void waitForCredential() {
+		List<Credential> credentials = credentialStorage.loadCredentials();
+		Optional<NamedOAuth2Credential> botCredOpt = Optional.empty();
+		for(Credential c : credentials) {
+			if(c instanceof NamedOAuth2Credential) {
+				if(((NamedOAuth2Credential) c).getName().equals("boCredential")) botCredOpt = Optional.of((NamedOAuth2Credential) c);
+			}
+		}
 		
-		LambdaAuthenticationController authController = new LambdaAuthenticationController(this::buildClient);
-		
-		credentialManager = CredentialManagerBuilder.builder()
-				.withAuthenticationController(authController)
-				.build();
-		authController.setCredentialManager(credentialManager);
-		credentialManager.registerIdentityProvider(identityProvider);
-		
-		Optional<NamedCredential> botCredential = storageInterface.loadNamedCredential("botCredential");
-		if(botCredential.isPresent()) {
-			Optional<OAuth2Credential> c = identityProvider.getAdditionalCredentialInformation(botCredential.get().getCredential());
-			c.ifPresent(credential -> botCredential.get().setCredential(credential));
-			System.out.println("Found bot credential for " + botCredential.get().getCredential().getUserName());
-			buildClient(botCredential.get().getCredential());
+		if(botCredOpt.isPresent()) {
+			System.out.println("Found bot credential.");
+			buildClient(botCredOpt.get().getCredential());
 		} else {
+			System.out.println("No saved bot credential found. Starting OAuth2 Authorization Code Flow.");
+			ChatbotAuthController authController = new ChatbotAuthController(this::buildClient);
+			
+			credentialManager = CredentialManagerBuilder.builder()
+					.withAuthenticationController(authController)
+					.build();
+			authController.setCredentialManager(credentialManager);
+			credentialManager.registerIdentityProvider(identityProvider);
+			
 			credentialManager.getAuthenticationController().startOAuth2AuthorizationCodeGrantType(
 					identityProvider,
 					"http://localhost:6464",
@@ -99,5 +92,26 @@ public class TwitchChatGameClient implements GameClient {
 					));
 		}
 	}
+	
+	private void buildClient(OAuth2Credential credential) {
+		Optional<OAuth2Credential> c = identityProvider.getAdditionalCredentialInformation(credential);
+		if(c.isPresent()) credential = c.get();
+		NamedOAuth2Credential botCredential = new NamedOAuth2Credential("botCredential", credential);
+		credentialStorage.saveCredentials(Collections.singletonList(botCredential));
+		System.out.println("Saved bot credential for " + credential.getUserName());
+		twitchChat = TwitchChatBuilder.builder()
+				.withEventManager(eventManager)
+				.withCredentialManager(credentialManager)
+				.withChatAccount(credential)
+				.build();
+		twitchChat.joinChannel(channelName);
+		System.out.println("Joined channel: " + channelName);
+		twitchChat.sendMessage(channelName, "I'm here! TwitchRPG");
+		
+		CommandDispatcher commandDispatcher = new CommandDispatcher(eventManager);
+		CommandHandler commandHandler = new CommandHandler(eventManager, twitchStorage);
+	}
+	
+	
 	
 }

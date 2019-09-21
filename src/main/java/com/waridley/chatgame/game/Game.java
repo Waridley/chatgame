@@ -1,6 +1,6 @@
 package com.waridley.chatgame.game;
 
-import com.waridley.chatgame.backend.game.GameStorageInterface;
+import com.waridley.chatgame.backend.GameStorageInterface;
 
 public class Game {
 	

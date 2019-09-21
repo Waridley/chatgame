@@ -1,4 +1,4 @@
-package com.waridley.chatgame.backend.game;
+package com.waridley.chatgame.backend;
 
 import com.waridley.chatgame.game.Player;
 import com.waridley.chatgame.ttv_integration.TwitchUser;
