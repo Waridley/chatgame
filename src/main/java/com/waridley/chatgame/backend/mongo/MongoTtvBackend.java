@@ -105,9 +105,9 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 //	}
 	//endregion
 	
-//
-//	//region Deprecated TwitchUser methods
-//	//region findOrCreateTwitchUser
+
+	//region Deprecated TwitchUser methods
+	//region findOrCreateTwitchUser
 //	public TwitchUser findOrCreateTwitchUser(long ttvUserId) throws TwitchUser.UserNotFoundException {
 //		UserList chatters = twitchClient.getHelix().getUsers(
 //				null,
@@ -169,9 +169,9 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 //		}*/
 //		return twitchUser;
 //	}
-//	//endregion
-//
-//	//region findTwitchUser()
+	//endregion
+
+	//region findTwitchUser()
 //	public TwitchUser findTwitchUser(long ttvUserId) throws TwitchUser.UserNotFoundException {
 //		UserList chatters = twitchClient.getHelix().getUsers(
 //				null,
@@ -208,7 +208,7 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 //		if(result == null) throw new TwitchUser.UserNotFoundException("User not found for id: " + user.getId());
 //		return result;
 //	}
-//	//endregion
+	//endregion
 //
 //	public TwitchUser logMinutes(TwitchUser user, long minutes, boolean online) {
 //		String status;
@@ -233,8 +233,8 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 //
 //		return updatedUser;
 //	}
-//	//endregion
-//
+	//endregion
+
 	
 	//region New TtvUser methods
 	//region findOrCreateTtvUser()

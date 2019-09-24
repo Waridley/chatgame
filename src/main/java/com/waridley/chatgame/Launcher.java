@@ -71,7 +71,7 @@ public class Launcher {
 		
 		loadClients(credentialManager.getOAuth2IdentityProviderByName("twitch").get(), channelName, ttvBackend);
 		
-		GameStorageInterface gameBackend = new MongoGameBackend(db);
+		GameStorageInterface gameBackend = new MongoGameBackend(db, twitchClient.getHelix(), null);
 		Game game = new Game(gameBackend);
 	}
 	

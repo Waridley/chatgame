@@ -22,6 +22,10 @@ public class TtvUser {
 //	public double getOnlineHours() { return toHours(onlineMinutes); }
 	public void setOnlineMinutes(long minutes) { this.onlineMinutes = minutes; }
 	
+	public TtvUser(User helixUser) {
+		setHelixUser(helixUser);
+	}
+	
 	public long totalMinutes() { return onlineMinutes + offlineMinutes; }
 //	public double getTotalHours() { return toHours(getTotalMinutes()); }
 	
