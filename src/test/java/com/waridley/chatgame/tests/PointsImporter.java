@@ -1,16 +1,16 @@
 package com.waridley.chatgame.tests;
 
+import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
-import com.github.twitch4j.helix.TwitchHelix;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.waridley.chatgame.backend.TwitchStorageInterface;
-import com.waridley.chatgame.backend.mongo.MongoTwitchBackend;
-import com.waridley.chatgame.ttv_integration.TwitchUser;
+import com.waridley.chatgame.backend.TtvStorageInterface;
+import com.waridley.chatgame.backend.mongo.MongoTtvBackend;
+import com.waridley.chatgame.ttv_integration.TtvUser;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,24 +21,24 @@ import java.net.URL;
 public class PointsImporter {
 	
 	private ConnectionString connectionString;
-	private TwitchHelix helix;
+	private TwitchClient twitchClient;
 	private TwitchIdentityProvider identityProvider;
 	
 	public static void main(String[] args) throws IOException {
 		ConnectionString connString = new ConnectionString(args[0]);
-		TwitchHelix helix = TwitchClientBuilder.builder().withEnableHelix(true).build().getHelix();
+		TwitchClient twitchClient = TwitchClientBuilder.builder().withEnableHelix(true).build();
 		TwitchIdentityProvider provider = new TwitchIdentityProvider("id", "secret", "localhost");
 		
-		PointsImporter pi = new PointsImporter(connString, helix, provider);
+		PointsImporter pi = new PointsImporter(connString, twitchClient, provider);
 		
 		File file = pi.getFileFromResources("phazon.csv");
 		
 		pi.importPoints(file);
 	}
 	
-	public PointsImporter(ConnectionString connectionString, TwitchHelix helix, TwitchIdentityProvider identityProvider) {
+	public PointsImporter(ConnectionString connectionString, TwitchClient twitchClient, TwitchIdentityProvider identityProvider) {
 		this.connectionString = connectionString;
-		this.helix = helix;
+		this.twitchClient = twitchClient;
 		this.identityProvider = identityProvider;
 	}
 	
@@ -69,10 +69,10 @@ public class PointsImporter {
 		MongoDatabase db = mongoClient.getDatabase("chatgame");
 		
 		
-		TwitchStorageInterface storageInterface = new MongoTwitchBackend(db, helix);
+		TtvStorageInterface storageInterface = new MongoTtvBackend(db, twitchClient);
 		
 		String line;
-		TwitchUser currentUser;
+		TtvUser currentUser;
 		while((line = br.readLine()) != null) {
 			String[] splitLine = line.split(",");
 			String username = splitLine[0];
@@ -80,19 +80,14 @@ public class PointsImporter {
 			long points = Long.parseLong(pointsString);
 			
 			
+			currentUser = storageInterface.findOrCreateTtvUser(username);
+			System.out.println(currentUser.getHelixUser().getLogin() +
+					" currently has " + currentUser.getOnlineMinutes() + " minutes. " +
+					"Would add " + String.valueOf(points));
 			
-			try {
-				currentUser = storageInterface.findOrCreateTwitchUser(username);
-				System.out.println(currentUser.getLogin() +
-						" currently has " + currentUser.getOnlineMinutes() + " minutes. " +
-						"Would add " + String.valueOf(points));
-				
-				//Only uncomment this line when ready to actually add points
-				//storageInterface.logMinutes(currentUser, points, true);
-				
-			} catch(TwitchUser.UserNotFoundException e) {
-				System.err.println("Didn't find user " + username);
-			}
+			//Only uncomment this line when ready to actually add points
+			//storageInterface.logMinutes(currentUser, points, true);
+			
 			
 		}
 		

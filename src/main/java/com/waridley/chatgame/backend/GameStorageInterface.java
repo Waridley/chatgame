@@ -1,8 +1,10 @@
 package com.waridley.chatgame.backend;
 
 import com.waridley.chatgame.game.Player;
-import com.waridley.chatgame.ttv_integration.TwitchUser;
+import com.waridley.chatgame.ttv_integration.TtvUser;
 import org.bson.types.ObjectId;
+
+import java.util.Optional;
 
 public interface GameStorageInterface {
 	
@@ -12,7 +14,9 @@ public interface GameStorageInterface {
 	 * @param twitchUser The Twitch account corresponding to the requested Player.
 	 * @return The Player if it exists, otherwise a newly created Player linked to the TwitchUser.
 	 */
-	Player findOrCreatePlayer(TwitchUser twitchUser);
+	Player findOrCreatePlayer(TtvUser ttvUser);
+	
+	Player findOrCreatePlayer(long ttvUserId);
 	
 	/**
 	 * Find a Player record, or create a new account if none exists.
@@ -22,13 +26,11 @@ public interface GameStorageInterface {
 	 */
 	Player findOrCreatePlayer(String gameUsername);
 	
-	Player findOrCreatePlayer(ObjectId id);
+	Optional<Player> findPlayer(TtvUser ttvUser);
+	Optional<Player> findPlayer(ObjectId id);
+	Optional<Player> findPlayer(String gameUsername);
 	
 	
-	Player findPlayer(TwitchUser twitchUser);
-	Player findPlayer(String gameUsername);
-	Player findPlayer(long userId);
-	
-	
+	void savePlayer(Player player);
 	
 }

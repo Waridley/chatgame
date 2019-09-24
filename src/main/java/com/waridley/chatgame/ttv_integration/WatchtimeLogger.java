@@ -12,7 +12,7 @@ import com.github.twitch4j.common.events.channel.ChannelGoOfflineEvent;
 import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
-import com.waridley.chatgame.backend.TwitchStorageInterface;
+import com.waridley.chatgame.backend.TtvStorageInterface;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,12 +35,12 @@ public class WatchtimeLogger {
 	private boolean online;
 	
 	private TwitchClient twitchClient;
-	private TwitchStorageInterface storageInterface;
+	private TtvStorageInterface storageInterface;
 	private String channelName;
-	private OAuth2Credential botChatCred;
+	private OAuth2Credential tmiCredential;
 	
-	private List<TwitchUser> usersInChat;
-	public List<TwitchUser> getUsersInChat() { return usersInChat; }
+	private List<TtvUser> usersInChat;
+	public List<TtvUser> getUsersInChat() { return usersInChat; }
 	
 	private LoggerTask loggerTask;
 	private ScheduledExecutorService scheduler;
@@ -50,10 +50,12 @@ public class WatchtimeLogger {
 	public long getLastUpdate() { return lastUpdate; }
 	private boolean running;
 	
-	//default interval of 10 minutes
+	/**
+	 * Constructs a WatchtimeLogger with the default interval of 10 minutes
+	 */
 	public WatchtimeLogger (
 			TwitchClient client,
-			TwitchStorageInterface storageInterface,
+			TtvStorageInterface storageInterface,
 			String channelName,
 			OAuth2Credential botChatCred) {
 		this(client, storageInterface, channelName, botChatCred, 10);
@@ -61,23 +63,23 @@ public class WatchtimeLogger {
 	
 	public WatchtimeLogger (
 			TwitchClient client,
-			TwitchStorageInterface storageInterface,
+			TtvStorageInterface storageInterface,
 			String channelName,
-			OAuth2Credential botChatCred,
+			OAuth2Credential tmiCredential,
 			long intervalMinutes) {
 		
 		this.twitchClient = client;
 		
 		this.storageInterface = storageInterface;
 		this.channelName = channelName;
-		this.botChatCred = botChatCred;
+		this.tmiCredential = tmiCredential;
 		this.interval = intervalMinutes;
 		this.loggerTask = new LoggerTask();
 		this.lastUpdate = 0L;
 		this.running = false;
 		
 		List<Stream> streams = twitchClient.getHelix().getStreams(
-				botChatCred.getAccessToken(),
+				tmiCredential.getAccessToken(),
 				"",
 				null,
 				1,
@@ -153,10 +155,10 @@ public class WatchtimeLogger {
 	private synchronized void updateChatters() {
 		//Update no more often than 30 seconds
 		if(new Date().getTime() - getLastUpdate() >= 30 * 1000) {
-			List<TwitchUser> tmpUsers = new ArrayList<>();
+			List<TtvUser> tmpUsers = new ArrayList<>();
 			
 			UserList chatters = twitchClient.getHelix().getUsers(
-					null,
+					tmiCredential.getAccessToken(),
 					null,
 					twitchClient.getMessagingInterface()
 							.getChatters(this.channelName)
@@ -167,7 +169,7 @@ public class WatchtimeLogger {
 			System.out.println("Users in chat at " + new Date().toString());
 			for(User user : chatters.getUsers()) {
 				System.out.println("    " + user.getLogin());
-				tmpUsers.add(storageInterface.findOrCreateTwitchUser(user));
+				tmpUsers.add(storageInterface.findOrCreateTtvUser(user));
 			}
 			
 			this.usersInChat = tmpUsers;
@@ -178,13 +180,13 @@ public class WatchtimeLogger {
 		}
 	}
 	
-	private synchronized TwitchUser logMinutes(TwitchUser user, long minutes) {
-		TwitchUser updatedUser = storageInterface.logMinutes(user, minutes, online);
+	private synchronized TtvUser logMinutes(TtvUser user, long minutes) {
+		TtvUser updatedUser = storageInterface.logMinutes(user, minutes, online);
 		return updatedUser;
 	}
 	
 	private synchronized void logAllMinutes(long minutes) {
-		List<TwitchUser> users = getUsersInChat();
+		List<TtvUser> users = getUsersInChat();
 		for(int i = 0; i < users.size(); i++) {
 			users.set(i, logMinutes(users.get(i), minutes));
 			//System.out.println(users.get(i).getHelixUser().getDisplayName() + " now has " + String.format("%.2f", users.get(i).getTotalHours()) + "h");

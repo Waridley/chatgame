@@ -14,6 +14,7 @@ import org.bson.types.ObjectId;
  *  Log chat messages
  */
 
+@Deprecated
 public class TwitchUser {
 	
 	private Long userid = null;

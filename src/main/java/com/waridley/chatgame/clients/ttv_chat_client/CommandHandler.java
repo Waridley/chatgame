@@ -6,20 +6,16 @@
 package com.waridley.chatgame.clients.ttv_chat_client;
 
 import com.github.philippheuer.events4j.EventManager;
-import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.chat.events.channel.ChannelLeaveEvent;
 import com.github.twitch4j.common.enums.CommandPermission;
-import com.github.twitch4j.common.events.domain.EventUser;
-import com.waridley.chatgame.backend.TwitchStorageInterface;
-import com.waridley.chatgame.ttv_integration.TwitchUser;
-
-import java.util.Optional;
+import com.waridley.chatgame.backend.TtvStorageInterface;
+import com.waridley.chatgame.ttv_integration.TtvUser;
 
 public class CommandHandler {
 	private EventManager eventManager;
-	private TwitchStorageInterface storageInterface;
+	private TtvStorageInterface storageInterface;
 	
-	public CommandHandler(EventManager eventManager, TwitchStorageInterface storageInterface) {
+	public CommandHandler(EventManager eventManager, TtvStorageInterface storageInterface) {
 		this.eventManager = eventManager;
 		this.eventManager.onEvent(CommandEvent.class).subscribe(this::onCommand);
 		this.storageInterface = storageInterface;
@@ -45,34 +41,26 @@ public class CommandHandler {
 					}
 					break;
 				case("hours"):
-					Optional<TwitchUser> user = Optional.empty();
-					try {
-						if(!event.getArguments().equals("") && (
-								event.getPermissions().contains(CommandPermission.BROADCASTER) ||
-								event.getPermissions().contains(CommandPermission.MODERATOR)) ||
-								event.getPermissions().contains(CommandPermission.VIP)
-								) {
-							user = Optional.ofNullable(storageInterface.findOrCreateTwitchUser(event.getArguments().split(" ")[0]));
-						} else {
-							user = Optional.ofNullable(storageInterface.findOrCreateTwitchUser(event.getUser().getId()));
-						}
-					} catch(TwitchUser.UserNotFoundException e) {
-						e.printStackTrace();
-					}
-					if(user.isPresent()) {
-						String onlineHours = String.format("%.2f", user.get().getOnlineHours());
-						String offlineHours = String.format("%.2f", user.get().getOfflineHours());
-						String totalHours = String.format("%.2f", user.get().getTotalHours());
-						
-						event.respondToUser(user.get().getHelixUser().getDisplayName() + " :: "
-								+ onlineHours + "h online" + " | "
-								+ offlineHours + "h offline" + " | "
-								+ totalHours + "h total"
-						);
+					String username;
+					if(!event.getArguments().equals("") && (
+							event.getPermissions().contains(CommandPermission.BROADCASTER) ||
+							event.getPermissions().contains(CommandPermission.MODERATOR)) ||
+							event.getPermissions().contains(CommandPermission.VIP)
+							) {
+						username = event.getArguments().split(" ")[0];
 					} else {
-						event.respondToUser("Error: Couldn't find user " + event.getUser().getName());
+						username = event.getUser().getName();
 					}
-				
+					TtvUser user = storageInterface.findOrCreateTtvUser(username);
+					String onlineHours = String.format("%.2f", user.getOnlineMinutes() / 60.0);
+					String offlineHours = String.format("%.2f", user.getOfflineMinutes() / 60.0);
+					String totalHours = String.format("%.2f", user.totalMinutes() / 60.0);
+					
+					event.respondToUser(user.getHelixUser().getDisplayName() + " :: "
+							+ onlineHours + "h online" + " | "
+							+ offlineHours + "h offline" + " | "
+							+ totalHours + "h total"
+					);
 				default:
 					//do nothing
 			}

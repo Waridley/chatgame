@@ -7,29 +7,25 @@ package com.waridley.chatgame.backend.mongo;
 
 import com.github.philippheuer.credentialmanager.api.IStorageBackend;
 import com.github.philippheuer.credentialmanager.domain.Credential;
-import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import com.waridley.chatgame.backend.NamedOAuth2Credential;
 import com.waridley.chatgame.backend.mongo.codecs.CredentialCodecProvider;
-import com.waridley.chatgame.backend.mongo.codecs.OAuth2Codec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.Convention;
-import org.bson.codecs.pojo.Conventions;
-import org.bson.codecs.pojo.PojoCodecProvider;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class MongoCredentialBackend implements IStorageBackend {
+public class MongoCredentialBackend extends MongoBackend implements IStorageBackend {
 	
 	private MongoCollection<Credential> credCollection;
 	
 	public MongoCredentialBackend(MongoDatabase db, String collectionName) {
+		super(db);
 		/*List<Convention> conventions = new ArrayList<>(Conventions.DEFAULT_CONVENTIONS);
 		conventions.add(Conventions.SET_PRIVATE_FIELDS_CONVENTION);
 		PojoCodecProvider pojoCodecProvider = PojoCodecProvider.builder()
@@ -43,16 +39,7 @@ public class MongoCredentialBackend implements IStorageBackend {
 				CodecRegistries.fromProviders(new CredentialCodecProvider())
 		);
 		
-		if(!collectionExists(db, collectionName)) db.createCollection(collectionName);
-		this.credCollection = db.getCollection(collectionName, Credential.class).withCodecRegistry(codecRegistry);
-	}
-	
-	private boolean collectionExists(MongoDatabase db, String collectionName) {
-		boolean collectionExists = false;
-		for(String name : db.listCollectionNames()) {
-			if(name.equals(collectionName)) collectionExists = true;
-		}
-		return collectionExists;
+		this.credCollection = createCollectionIfNotExists(collectionName, Credential.class).withCodecRegistry(codecRegistry);
 	}
 	
 	@Override
@@ -68,7 +55,10 @@ public class MongoCredentialBackend implements IStorageBackend {
 	public void saveCredentials(List<Credential> credentials) {
 		for(Credential credential : credentials) {
 			credCollection.replaceOne(
-					Filters.eq("userId", credential),
+					Filters.or(
+							Filters.eq("userId", credential.getUserId()),
+							Filters.eq("name", credential instanceof NamedOAuth2Credential ? ((NamedOAuth2Credential) credential) : null)
+							),
 					credential,
 					new ReplaceOptions().upsert(true)
 			);

@@ -12,12 +12,6 @@ public class NamedOAuth2Credential extends Credential {
 	
 	private String name;
 	
-	/**
-	 * Credential
-	 *
-	 * @param identityProvider Identity Provider
-	 * @param userId           User Id
-	 */
 	public NamedOAuth2Credential(String name, OAuth2Credential credential) {
 		super(credential.getIdentityProvider(), credential.getUserId());
 		setName(name);
