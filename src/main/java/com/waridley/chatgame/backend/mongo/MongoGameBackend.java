@@ -25,6 +25,11 @@ import java.util.*;
 public class MongoGameBackend extends MongoBackend implements GameStorageInterface {
 	
 	private MongoCollection<Player> playerCollection;
+	
+	public MongoCollection<Player> getPlayerCollection() {
+		return playerCollection;
+	}
+	
 	private Map<ObjectId, Player> playerCache = Collections.synchronizedSortedMap(new TreeMap<>());
 	private TwitchHelix helix;
 	private OAuth2Credential helixCredential;
@@ -148,7 +153,7 @@ public class MongoGameBackend extends MongoBackend implements GameStorageInterfa
 	//endregion
 	
 	@Override
-	public Player logMintues(Player player, long minutes, boolean online) {
+	public Player logMinutes(Player player, long minutes, boolean online) {
 		//TODO implement player watchtime logging
 		return null;
 	}

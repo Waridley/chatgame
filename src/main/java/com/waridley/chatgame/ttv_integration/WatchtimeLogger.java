@@ -155,21 +155,16 @@ public class WatchtimeLogger {
 	private synchronized void updateChatters() {
 		//Update no more often than 30 seconds
 		if(new Date().getTime() - getLastUpdate() >= 30 * 1000) {
-			List<TtvUser> tmpUsers = new ArrayList<>();
-			
-			UserList chatters = twitchClient.getHelix().getUsers(
-					tmiCredential.getAccessToken(),
-					null,
-					twitchClient.getMessagingInterface()
+			List<String> namesInChat = twitchClient.getMessagingInterface()
 							.getChatters(this.channelName)
 							.execute()
-							.getAllViewers()
-			).execute();
+							.getAllViewers();
 			
 			System.out.println("Users in chat at " + new Date().toString());
-			for(User user : chatters.getUsers()) {
-				System.out.println("    " + user.getLogin());
-				tmpUsers.add(storageInterface.findOrCreateTtvUser(user));
+			List<TtvUser> tmpUsers = new ArrayList<>();
+			for(String username : namesInChat) {
+				System.out.println("    " + username);
+				tmpUsers.add(storageInterface.findOrCreateTtvUser(username));
 			}
 			
 			this.usersInChat = tmpUsers;

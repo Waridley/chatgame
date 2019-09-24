@@ -23,10 +23,7 @@ import org.bson.codecs.pojo.Convention;
 import org.bson.codecs.pojo.Conventions;
 import org.bson.codecs.pojo.PojoCodecProvider;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import org.bson.codecs.configuration.CodecRegistries;
 
@@ -36,7 +33,13 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 //	public MongoCollection<TwitchUser> getTwitchUserCollection() { return twitchUserCollection; }
 	
 	private MongoCollection<TtvUser> ttvUserCollection;
+	
+	public MongoCollection<TtvUser> getTtvUserCollection() {
+		return ttvUserCollection;
+	}
+	
 	private TwitchClient twitchClient;
+	private Map<Long, TtvUser> ttvUserCache = Collections.synchronizedSortedMap(new TreeMap<>());
 	
 	//private MongoCredStorageBackend credStorageBackend;
 	//private MongoCollection<NamedOAuth2Credential> adminCollection;
@@ -240,22 +243,40 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 	//region findOrCreateTtvUser()
 	@Override
 	public TtvUser findOrCreateTtvUser(long ttvUserId) {
-		UserList chatters = twitchClient.getHelix().getUsers(
-				null,
-				Collections.singletonList(ttvUserId),
-				null
-		).execute();
-		try {
-			return findOrCreateTtvUser(chatters.getUsers().get(0));
-		} catch(IndexOutOfBoundsException e) {
-			e.printStackTrace();
+		TtvUser ttvUser = ttvUserCache.get(ttvUserId);
+		if(ttvUser == null) {
+			UserList chatters = twitchClient.getHelix().getUsers(
+					null,
+					Collections.singletonList(ttvUserId),
+					null
+			).execute();
+			for(User u : chatters.getUsers()) {
+				ttvUser = findOrCreateTtvUser(u);
+			}
 		}
-		return null;
+		return ttvUser;
 	}
 	
 	@Override
 	public TtvUser findOrCreateTtvUser(String ttvLogin) {
-		return null;
+		TtvUser ttvUser = null;
+		for(TtvUser u : ttvUserCache.values()) {
+			if(u.getHelixUser().getLogin().equalsIgnoreCase(ttvLogin)) {
+				ttvUser = u;
+				break;
+			}
+		}
+		if(ttvUser == null) {
+			UserList chatters = twitchClient.getHelix().getUsers(
+					null,
+					null,
+					Collections.singletonList(ttvLogin)
+			).execute();
+			for(User u : chatters.getUsers()) {
+				ttvUser = findOrCreateTtvUser(u);
+			}
+		}
+		return ttvUser;
 	}
 	
 	@Override
@@ -275,6 +296,7 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 				),
 				new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
 		);
+		if(ttvUser != null) ttvUserCache.put(ttvUser.getId(), ttvUser);
 		return ttvUser;
 	}
 	//endregion
@@ -282,15 +304,16 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 	//region findTtvUser()
 	@Override
 	public Optional<TtvUser> findTtvUser(long ttvUserId) {
-		Optional<TtvUser> result = Optional.empty();
-		UserList chatters = twitchClient.getHelix().getUsers(
-				null,
-				Collections.singletonList(ttvUserId),
-				null
-		).execute();
-		for(User user : chatters.getUsers()) {
-			if(!result.isPresent()) result = findTtvUser(user);
-			else throw new RuntimeException("More than one user found for id: " + ttvUserId); //Shouldn't happen, would be on Twitch's end
+		Optional<TtvUser> result = Optional.ofNullable(ttvUserCache.get(ttvUserId));
+		if(!result.isPresent()) {
+			UserList chatters = twitchClient.getHelix().getUsers(
+					null,
+					Collections.singletonList(ttvUserId),
+					null
+			).execute();
+			for(User u : chatters.getUsers()) {
+				result = findTtvUser(u);
+			}
 		}
 		return result;
 	}
@@ -298,26 +321,27 @@ public class MongoTtvBackend extends MongoBackend implements TtvStorageInterface
 	@Override
 	public Optional<TtvUser> findTtvUser(String ttvLogin) {
 		Optional<TtvUser> result = Optional.empty();
-		UserList chatters = twitchClient.getHelix().getUsers(
-				null,
-				null,
-				Collections.singletonList(ttvLogin.toLowerCase())
-		).execute();
-		for(User user : chatters.getUsers()) {
-			if(!result.isPresent()) result = findTtvUser(user);
-			else throw new RuntimeException("More than one user found for login: " + ttvLogin); //Shouldn't happen, would be on Twitch's end
+		for(TtvUser u : ttvUserCache.values()) {
+			if(u.getHelixUser().getLogin().equalsIgnoreCase(ttvLogin)) {
+				result = Optional.of(u);
+			}
+		}
+		if(!result.isPresent()) {
+			UserList chatters = twitchClient.getHelix().getUsers(
+					null,
+					null,
+					Collections.singletonList(ttvLogin.toLowerCase())
+			).execute();
+			for(User u : chatters.getUsers()) {
+				result = findTtvUser(u);
+			}
 		}
 		return result;
 	}
 	
 	@Override
 	public Optional<TtvUser> findTtvUser(User user) {
-		TtvUser result = null;
-		FindIterable<TtvUser> userIterable = ttvUserCollection.find(Filters.eq("_id", user.getId()));
-		for(TtvUser ttvUser : userIterable) {
-			if(result == null) result = ttvUser;
-			else throw new RuntimeException("More than one user found for id: " + user.getId());
-		}
+		TtvUser result = ttvUserCollection.find(Filters.eq("_id", user.getId())).first();
 		return Optional.ofNullable(result);
 	}
 	//endregion

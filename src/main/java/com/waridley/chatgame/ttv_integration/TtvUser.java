@@ -22,6 +22,10 @@ public class TtvUser {
 //	public double getOnlineHours() { return toHours(onlineMinutes); }
 	public void setOnlineMinutes(long minutes) { this.onlineMinutes = minutes; }
 	
+	public TtvUser() {
+		//needed for pojo deserialization
+	}
+	
 	public TtvUser(User helixUser) {
 		setHelixUser(helixUser);
 	}

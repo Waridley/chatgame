@@ -30,7 +30,7 @@ public interface GameStorageInterface {
 	Optional<Player> findPlayer(ObjectId id);
 	Optional<Player> findPlayer(String gameUsername);
 	
-	Player logMintues(Player player, long minutes, boolean online);
+	Player logMinutes(Player player, long minutes, boolean online);
 	
 	
 	Player savePlayer(Player player);

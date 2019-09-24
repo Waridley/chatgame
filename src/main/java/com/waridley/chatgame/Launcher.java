@@ -67,7 +67,7 @@ public class Launcher {
 		TtvStorageInterface ttvBackend = new MongoTtvBackend(db, twitchClient);
 		
 		
-		startWatchtimeLogger(channelName, idProvider, ttvBackend, twitchClient, twitchCredential, 6L);
+		startWatchtimeLogger(channelName, ttvBackend, twitchClient, twitchCredential, 6L);
 		
 		loadClients(credentialManager.getOAuth2IdentityProviderByName("twitch").get(), channelName, ttvBackend);
 		
@@ -86,7 +86,6 @@ public class Launcher {
 	}
 	
 	private static void startWatchtimeLogger(String channelName,
-	                                         OAuth2IdentityProvider identityProvider,
 	                                         TtvStorageInterface storageInterface,
 	                                         TwitchClient twitchClient,
 	                                         OAuth2Credential twitchCredenial,
