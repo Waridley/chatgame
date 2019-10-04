@@ -5,16 +5,11 @@ plugins {
 group 'com.waridley.chatgame'
 version '0.1'
 
-sourceCompatibility = 1.9
-
-project.ext {
-    groupId = 'com.waridley.chatgame'
-    artifactNamespace = 'chatgame'
-    artifactName = 'ChatGame'
-}
+sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
+
 
     jcenter()
     maven { url "https://oss.jfrog.org/artifactory/libs-release"}
@@ -36,13 +31,11 @@ dependencies {
 
     compile 'de.undercouch:bson4jackson:2.9.2'
 
-    compile project("api")
-    compile project("ttv_chat_client")
-    compile project("ttv")
-    compile project("credentials")
-    compile project("mongo")
-    compile project("api:backend")
-    compile project("api:frontend")
-    compile project("server")
-    compile project("game")
+    compile project(":game")
+    compile project(":api:backend")
+    compile project(":api:frontend")
+    compile project(":mongo")
+    compile project(":credentials")
+    compile project(":ttv")
+    compile project(":ttv_chat_client")
 }

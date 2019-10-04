@@ -1,1 +1,11 @@
 rootProject.name = 'chatgame'
+include 'api'
+include 'ttv_chat_client'
+include 'ttv'
+include 'credentials'
+include 'mongo'
+include 'api:backend'
+include 'api:frontend'
+include 'server'
+include 'game'
+

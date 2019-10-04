@@ -8,9 +8,9 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.waridley.chatgame.backend.TtvStorageInterface;
-import com.waridley.chatgame.backend.mongo.MongoTtvBackend;
-import com.waridley.chatgame.ttv_integration.TtvUser;
+import com.waridley.ttv.TtvStorageInterface;
+import com.waridley.ttv.mongo.MongoTtvBackend;
+import com.waridley.ttv.TtvUser;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,7 +33,7 @@ public class PointsImporter {
 		
 		File file = pi.getFileFromResources("phazon.csv");
 		
-		pi.importPoints(file);
+//		pi.importPoints(file);
 	}
 	
 	public PointsImporter(ConnectionString connectionString, TwitchClient twitchClient, TwitchIdentityProvider identityProvider) {
@@ -54,44 +54,44 @@ public class PointsImporter {
 		
 	}
 	
-	private void importPoints(File file) throws IOException {
-		if(file == null) return;
-		
-		FileReader reader = new FileReader(file);
-		BufferedReader br = new BufferedReader(reader);
-		
-		MongoClientSettings settings = MongoClientSettings.builder()
-				.applyConnectionString(connectionString)
-				.retryWrites(true)
-				.build();
-		
-		MongoClient mongoClient = MongoClients.create(settings);
-		MongoDatabase db = mongoClient.getDatabase("chatgame");
-		
-		
-		TtvStorageInterface storageInterface = new MongoTtvBackend(db, twitchClient);
-		
-		String line;
-		TtvUser currentUser;
-		while((line = br.readLine()) != null) {
-			String[] splitLine = line.split(",");
-			String username = splitLine[0];
-			String pointsString = splitLine[1];
-			long points = Long.parseLong(pointsString);
-			
-			
-			currentUser = storageInterface.findOrCreateTtvUser(username);
-			System.out.println(currentUser.getHelixUser().getLogin() +
-					" currently has " + currentUser.getOnlineMinutes() + " minutes. " +
-					"Would add " + String.valueOf(points));
-			
-			//Only uncomment this line when ready to actually add points
-			//storageInterface.logMinutes(currentUser, points, true);
-			
-			
-		}
-		
-	}
+//	private void importPoints(File file) throws IOException {
+//		if(file == null) return;
+//
+//		FileReader reader = new FileReader(file);
+//		BufferedReader br = new BufferedReader(reader);
+//
+//		MongoClientSettings settings = MongoClientSettings.builder()
+//				.applyConnectionString(connectionString)
+//				.retryWrites(true)
+//				.build();
+//
+//		MongoClient mongoClient = MongoClients.create(settings);
+//		MongoDatabase db = mongoClient.getDatabase("chatgame");
+//
+//
+//		TtvStorageInterface storageInterface = new MongoTtvBackend(db, twitchClient);
+//
+//		String line;
+//		TtvUser currentUser;
+//		while((line = br.readLine()) != null) {
+//			String[] splitLine = line.split(",");
+//			String username = splitLine[0];
+//			String pointsString = splitLine[1];
+//			long points = Long.parseLong(pointsString);
+//
+//
+//			currentUser = storageInterface.findOrCreateTtvUser(username);
+//			System.out.println(currentUser.getHelixUser().getLogin() +
+//					" currently has " + currentUser.getOnlineMinutes() + " minutes. " +
+//					"Would add " + String.valueOf(points));
+//
+//			//Only uncomment this line when ready to actually add points
+//			//storageInterface.logMinutes(currentUser, points, true);
+//
+//
+//		}
+//
+//	}
 	
 	/*public TwitchUser logMinutes(TwitchUser user, long minutes, boolean online) {
 		
