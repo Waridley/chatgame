@@ -60,7 +60,7 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 	private MongoCollection<Player> createPlayerViewIfNotExists() {
 		boolean viewExists = false;
 		for(String name : db.listCollectionNames()) {
-			if(name.equals("playerView")) {
+			if(name.equals("player_view")) {
 				viewExists = true;
 				break;
 			}

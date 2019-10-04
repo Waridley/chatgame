@@ -44,8 +44,10 @@ public class Launcher {
 	private static TwitchClient twitchClient;
 	private static TtvStorageInterface ttvBackend;
 	private static GameStorageInterface gameBackend;
+	private static ServerOptions serverOptions;
 	
 	public static void main(String[] args) throws Exception {
+		serverOptions = ServerOptions.fromArgs(args);
 		init(args);
 		launch();
 	}
@@ -53,16 +55,15 @@ public class Launcher {
 	public static void launch() throws Exception {
 		
 		//startWatchtimeLogger(6L);
+		GameServer server = new GameServer(ttvBackend, gameBackend, serverOptions);
+		server.start();
+		loadClients(idProvider, channelName, server.getCommandExecutive());
 		
-		loadClients(credentialManager.getOAuth2IdentityProviderByName("twitch").get(), channelName);
-		
-		Game game = new Game();
-		GameServer server = new GameServer(game, gameBackend);
 	}
 	
-	private static void loadClients(OAuth2IdentityProvider idProvider, String channelName) {
+	private static void loadClients(OAuth2IdentityProvider idProvider, String channelName, CommandExecutive exec) {
 		List<GameClient> gameClients = new ArrayList<>();
-		gameClients.add(new TwitchChatGameClient(idProvider, channelName, new EmbeddedCommandMediator(ttvBackend, gameBackend)));
+		gameClients.add(new TwitchChatGameClient(idProvider, channelName, new EmbeddedCommandMediator(exec)));
 //		gameClients.add(new DummyDiscordClient(idProvider, ttvBackend));
 
 		for(GameClient gameClient : gameClients) {
@@ -83,7 +84,9 @@ public class Launcher {
 	
 	private static void init(String[] args) throws URISyntaxException {
 		channelName = args[0];
+		serverOptions.getEmbeddedChatClientOptions().setChannelName(channelName);
 		idProvider = new RefreshingProvider(args[2], args[3], "http://localhost:6464");
+		serverOptions.getEmbeddedChatClientOptions().setIdentityProvider(idProvider);
 		db = connectToDatabase(args[4]);
 		twitchCredential = new OAuth2Credential("twitch", args[5]);
 		

@@ -10,22 +10,18 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class EmbeddedCommandMediator implements CommandMediator {
 	
-	private TtvStorageInterface ttvStorageInterface;
-	
-	private GameStorageInterface gameStorageInterface;
-	
+	private CommandExecutive exec;
 	
 	@Override
 	public Player getPlayerByTtvLogin(String login) {
 		System.out.println("Getting TtvUser for login \"" + login + "\"");
-		TtvUser ttvUser = ttvStorageInterface.findOrCreateTtvUser(login);
+		TtvUser ttvUser = exec.info.ttvUserFromLogin(login);
 		System.out.println("Getting player for TtvUser \"" + ttvUser.getHelixUser().getDisplayName() + "\"");
-		return gameStorageInterface.findOrCreatePlayer(ttvUser);
+		return exec.info.playerFromTtvUser(ttvUser);
 	}
 	
 	@Override
 	public Player getPlayerByTtvUserId(String userId) {
-		return gameStorageInterface.findOrCreatePlayer(userId);
+		return exec.info.playerFromTtvUserId(userId);
 	}
-	
 }

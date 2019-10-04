@@ -8,6 +8,8 @@ public class SocketCommandListener {
 	
 	private CommandMediator commandMediator;
 	
+	private ServerOptions.SocketCommandListenerOptions options;
 	
 	
+	//TODO: Implement socket server
 }
