@@ -8,7 +8,7 @@ compileJava {
 group 'com.waridley.chatgame'
 version '0.1'
 
-sourceCompatibility = 1.9
+sourceCompatibility = 1.8
 
 repositories {
     mavenCentral()
