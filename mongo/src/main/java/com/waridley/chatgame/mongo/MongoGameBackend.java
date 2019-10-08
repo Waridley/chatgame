@@ -19,6 +19,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.Convention;
 import org.bson.codecs.pojo.Conventions;
 import org.bson.codecs.pojo.PojoCodecProvider;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import java.util.*;
@@ -70,11 +71,9 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 		if(!viewExists) db.createView(
 				"player_view",
 				"playerdata",
-				List.of(
-						Aggregates.lookup("ttv_users", "ttvUserId", "_id", "ttvUser"),
+				new ArrayList<>(Arrays.asList(Aggregates.lookup("ttv_users", "ttvUserId", "_id", "ttvUser"),
 						Aggregates.unwind("$ttvUser"),
-						Aggregates.project(new Document("ttvUserId", 0))
-				)
+						Aggregates.project(new Document("ttvUserId", 0))))
 		);
 		return db.getCollection("player_view", Player.class);
 	}
