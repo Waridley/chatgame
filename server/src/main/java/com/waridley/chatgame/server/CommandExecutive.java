@@ -6,14 +6,13 @@ import com.waridley.ttv.TtvStorageInterface;
 import com.waridley.ttv.TtvUser;
 import lombok.AllArgsConstructor;
 
-@AllArgsConstructor
 public class CommandExecutive {
 	
 	private final TtvStorageInterface ttvStorageInterface;
 	private final GameStorageInterface gameStorageInterface;
 	
-	public final InfoRelayer info;
-	private final PermissionChecker check;
+	final InfoRelayer info;
+	final PermissionChecker check;
 	
 	CommandExecutive(TtvStorageInterface ttvStorageInterface, GameStorageInterface gameStorageInterface) {
 		this.ttvStorageInterface = ttvStorageInterface;
@@ -43,7 +42,7 @@ public class CommandExecutive {
 	}
 	
 	@AllArgsConstructor
-	private static class PermissionChecker {
+	static class PermissionChecker {
 		
 		private TtvStorageInterface ttvStorageInterface;
 		private GameStorageInterface gameStorageInterface;
@@ -51,5 +50,7 @@ public class CommandExecutive {
 		
 		
 	}
+	
+	
 	
 }

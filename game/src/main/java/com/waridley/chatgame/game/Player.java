@@ -5,6 +5,7 @@
 
 package com.waridley.chatgame.game;
 
+import com.waridley.chatgame.game.inventory.Backpack;
 import com.waridley.ttv.TtvUser;
 import org.bson.types.ObjectId;
 
@@ -43,6 +44,13 @@ public class Player implements Comparable {
 	public void changeTwitchAccount(TtvUser ttvUser, boolean changeUsername) {
 		changeUsername(ttvUser.getHelixUser().getDisplayName(), changeUsername);
 		setTtvUser(ttvUser);
+	}
+	
+	
+	private Backpack backpack = new Backpack();
+	
+	public Backpack getBackpack() {
+		return backpack;
 	}
 	
 //	private Long twitchUserId = null;
@@ -106,4 +114,5 @@ public class Player implements Comparable {
 	public int compareTo(Object o) {
 		return ((Player) o).getId().compareTo(id);
 	}
+	
 }

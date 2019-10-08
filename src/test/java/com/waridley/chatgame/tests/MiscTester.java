@@ -6,32 +6,15 @@
 package com.waridley.chatgame.tests;
 
 
-import com.github.philippheuer.credentialmanager.CredentialManager;
-import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
 import com.github.philippheuer.credentialmanager.api.IStorageBackend;
 import com.github.philippheuer.credentialmanager.domain.Credential;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
-import com.github.twitch4j.TwitchClient;
-import com.github.twitch4j.TwitchClientBuilder;
-import com.github.twitch4j.helix.domain.User;
-import com.github.twitch4j.helix.domain.UserList;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.*;
-import com.mongodb.client.model.Filters;
-import com.waridley.chatgame.server.Launcher;
-import com.waridley.credentials.DesktopAuthController;
 import com.waridley.credentials.mongo.MongoCredentialStorageBackend;
-import com.waridley.chatgame.mongo.MongoGameBackend;
-import com.waridley.credentials.NamedOAuth2Credential;
-import com.waridley.credentials.RefreshingProvider;
-import com.waridley.ttv.mongo.MongoTtvBackend;
-import com.waridley.chatgame.game.Player;
-import com.waridley.ttv.TtvUser;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class MiscTester {
@@ -105,7 +88,7 @@ public class MiscTester {
 		List<Credential> credentials = new ArrayList<>();
 		credentials.add(new Credential("me", "testid") { });
 		credentials.add(new OAuth2Credential("twitch", "testtoken"));
-		credentials.add(new NamedOAuth2Credential("Inamedit", new OAuth2Credential("meagain", "access denied")));
+//		credentials.add(new NamedOAuth2Credential("Inamedit", new OAuth2Credential("meagain", "access denied")));
 		credentials.add(new OAuth2Credential("twitch", "accessToken", "refreshToken", "userid", "username", 3600, null));
 		
 		storageBackend.saveCredentials(credentials);

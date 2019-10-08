@@ -5,7 +5,10 @@
 
 package com.waridley.chatgame.game.inventory;
 
-public class BankAccount {
-	ItemContainer space;
+import lombok.Data;
 
+@Data
+public class BankAccount {
+	ItemContainer itemVault = new ItemContainer();
+	CurrencyContainer currencyVault = new CurrencyContainer();
 }

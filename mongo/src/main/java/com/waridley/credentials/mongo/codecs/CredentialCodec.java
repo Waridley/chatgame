@@ -2,7 +2,6 @@ package com.waridley.credentials.mongo.codecs;
 
 import com.github.philippheuer.credentialmanager.domain.Credential;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
-import com.waridley.credentials.NamedOAuth2Credential;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.bson.BsonWriter;
@@ -50,9 +49,9 @@ public class CredentialCodec implements Codec<Credential> {
 				case("identityProvider"):
 					identityProvider = reader.readString();
 					break;
-				case("name"):
-					name = Optional.of(reader.readString());
-					break;
+//				case("name"):
+//					name = Optional.of(reader.readString());
+//					break;
 				case("credential"):
 					oAuth2Credential = Optional.of(new OAuth2Codec().decode(reader, decoderContext));
 					break;
@@ -81,9 +80,10 @@ public class CredentialCodec implements Codec<Credential> {
 		}
 		reader.readEndDocument();
 		
-		if(name.isPresent()) {
-			credential = new NamedOAuth2Credential(name.get(), oAuth2Credential.orElse(null));
-		} else if(accessToken.isPresent()) {
+//		if(name.isPresent()) {
+//			credential = new NamedOAuth2Credential(name.get(), oAuth2Credential.orElse(null));
+//		} else
+			if(accessToken.isPresent()) {
 			credential = new OAuth2Credential(
 					identityProvider,
 					accessToken.get(),

@@ -9,7 +9,7 @@
  * Licensed under the EUPL
  */
 
-package com.waridley.chatgame.ttv_chat_client;
+package com.waridley.ttv;
 
 import com.github.twitch4j.chat.enums.CommandSource;
 import com.github.twitch4j.chat.events.TwitchEvent;

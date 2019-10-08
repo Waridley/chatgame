@@ -5,25 +5,20 @@
 
 package com.waridley.credentials.mongo;
 
-import com.github.philippheuer.credentialmanager.api.IStorageBackend;
 import com.github.philippheuer.credentialmanager.domain.Credential;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.ReplaceOptions;
-import com.waridley.credentials.NamedOAuth2Credential;
+import com.waridley.credentials.NamedCredentialStorageBackend;
 import com.waridley.credentials.mongo.codecs.CredentialCodecProvider;
 import com.waridley.mongo.MongoBackend;
+import com.waridley.mongo.MongoMap;
+import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-public class MongoCredentialStorageBackend implements MongoBackend, IStorageBackend {
+public class MongoCredentialStorageBackend extends NamedCredentialStorageBackend implements MongoBackend {
 	
-	private MongoCollection<Credential> credCollection;
+	private MongoCollection<Document> credCollection;
 	private MongoDatabase db;
 	
 	public MongoCredentialStorageBackend(MongoDatabase db, String collectionName) {
@@ -41,44 +36,51 @@ public class MongoCredentialStorageBackend implements MongoBackend, IStorageBack
 				CodecRegistries.fromProviders(new CredentialCodecProvider())
 		);
 		
-		this.credCollection = createCollectionIfNotExists(collectionName, Credential.class).withCodecRegistry(codecRegistry);
+		this.credCollection = createCollectionIfNotExists(collectionName, Document.class).withCodecRegistry(codecRegistry);
+	
+		this.credentialMap = new MongoMap<>(credCollection, Credential.class);
 	}
 	
-	@Override
-	public List<Credential> loadCredentials() {
-		ArrayList<Credential> credentials = new ArrayList<>();
-		for(Credential cred : credCollection.find()) {
-			credentials.add(cred);
-		}
-		return credentials;
-	}
+//	@Override
+//	public List<Credential> loadCredentials() {
+//		ArrayList<Credential> credentials = new ArrayList<>();
+//		for(Credential cred : credCollection.find()) {
+//			credentials.add(cred);
+//		}
+//		return credentials;
+//	}
 	
 	@Override
-	public void saveCredentials(List<Credential> credentials) {
-		for(Credential credential : credentials) {
-			credCollection.replaceOne(
-					Filters.or(
-							Filters.eq("userId", credential.getUserId()),
-							Filters.eq("name", credential instanceof NamedOAuth2Credential ? ((NamedOAuth2Credential) credential) : null)
-							),
-					credential,
-					new ReplaceOptions().upsert(true)
-			);
-			
-			/*credCollection.findOneAndUpdate(
-					Filters.eq("userId", credential.getUserId()),
-					Updates.combine(
-							new Document(
-									"$setOnInsert",
-									new Document("userId", credential.getUserId())
-							),
-							new Document(
-									"$set",
-									new Document("credential", credential)
-							)
-					)
-			);*/
-		}
+	public MongoDatabase db() {
+		return db;
+	}
+
+//	@Override
+//	public void saveCredentials(List<Credential> credentials) {
+//		for(Credential credential : credentials) {
+//			credCollection.replaceOne(
+//					Filters.or(
+//							Filters.eq("userId", credential.getUserId()),
+//							Filters.eq("name", credential instanceof NamedOAuth2Credential ? ((NamedOAuth2Credential) credential) : null)
+//							),
+//					credential,
+//					new ReplaceOptions().upsert(true)
+//			);
+//
+//			/*credCollection.findOneAndUpdate(
+//					Filters.eq("userId", credential.getUserId()),
+//					Updates.combine(
+//							new Document(
+//									"$setOnInsert",
+//									new Document("userId", credential.getUserId())
+//							),
+//							new Document(
+//									"$set",
+//									new Document("credential", credential)
+//							)
+//					)
+//			);*/
+//		}
 		
 		/*for(Credential credential : credentials) {
 			if (credential instanceof OAuth2Credential) {
@@ -107,17 +109,17 @@ public class MongoCredentialStorageBackend implements MongoBackend, IStorageBack
 					throw new RuntimeException("Credential is not an OAuth2Credential");
 			}
 		}*/
-	}
+//	}
 	
-	@Override
-	public Optional<Credential> getCredentialByUserId(String userId) {
-		return Optional.ofNullable(credCollection.find(Filters.eq("userId", userId)).first());
-	}
-	
-	@Override
-	public MongoDatabase db() {
-		return db;
-	}
+//	@Override
+//	public Optional<Credential> getCredentialByUserId(String userId) {
+//		return Optional.ofNullable(credCollection.find(Filters.eq("userId", userId)).first());
+//	}
+//
+//	@Override
+//	public MongoDatabase db() {
+//		return db;
+//	}
 	
 	/*public static class CredentialWrapper {
 		

@@ -20,11 +20,9 @@ import com.mongodb.client.MongoDatabase;
 import com.waridley.chatgame.api.backend.GameStorageInterface;
 import com.waridley.chatgame.api.frontend.GameClient;
 import com.waridley.chatgame.mongo.MongoGameBackend;
-import com.waridley.chatgame.game.Game;
-import com.waridley.chatgame.server.EmbeddedCommandMediator;
 import com.waridley.chatgame.ttv_chat_client.TwitchChatGameClient;
 import com.waridley.credentials.DesktopAuthController;
-import com.waridley.credentials.RefreshingProvider;
+import com.waridley.ttv.RefreshingProvider;
 import com.waridley.credentials.mongo.MongoCredentialStorageBackend;
 import com.waridley.ttv.TtvStorageInterface;
 import com.waridley.ttv.mongo.MongoTtvBackend;
@@ -32,6 +30,7 @@ import com.waridley.ttv.mongo.MongoTtvBackend;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class Launcher {
 	
@@ -47,6 +46,15 @@ public class Launcher {
 	private static ServerOptions serverOptions;
 	
 	public static void main(String[] args) throws Exception {
+		Properties props = System.getProperties();
+		props.put("org.slf4j.simpleLogger.defaultLogLevel", "warn");
+		props.put("org.slf4j.simpleLogger.showThreadName", "false");
+		props.put("org.slf4j.simpleLogger.showLogName", "false");
+		props.put("org.slf4j.simpleLogger.showShortLogName", "true");
+		props.put("org.slf4j.simpleLogger.log." + TwitchChatGameClient.class.getName(), "trace");
+		
+		System.setProperties(props);
+		
 		serverOptions = ServerOptions.fromArgs(args);
 		init(args);
 		launch();

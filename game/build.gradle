@@ -10,13 +10,17 @@ sourceCompatibility = 1.8
 repositories {
     mavenCentral()
     maven { url "https://oss.jfrog.org/artifactory/libs-release"}
+    maven { url 'https://raw.githubusercontent.com/Waridley/twitch4j/master'}
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile 'org.mongodb:mongo-java-driver:3.11.0'
 
-    compile 'com.github.twitch4j:twitch4j-helix:1.0.0-alpha.16'
+    compileOnly 'org.projectlombok:lombok:1.18.10'
+    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+
+    compile group: 'com.github.twitch4j', name: 'twitch4j', version: '1.0.0-alpha.16'
 
     compile project(":ttv")
 }

@@ -1,7 +1,9 @@
 plugins {
     id 'java'
 }
-
+compileJava {
+    options.encoding = "UTF-8"
+}
 group 'com.waridley.chatgame'
 version '0.1'
 
@@ -23,17 +25,20 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
+    //logger
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.2'
 
     //mongodb java driver
     compile 'org.mongodb:mongo-java-driver:3.11.0'
 
     //Twitch API library
-    compile 'com.github.twitch4j:twitch4j:1.0.0-alpha.16'
+    compile group: 'com.github.twitch4j', name: 'twitch4j', version: '1.0.0-alpha.16'
 
     //lombok
     compileOnly 'org.projectlombok:lombok:1.18.10'
     annotationProcessor 'org.projectlombok:lombok:1.18.10'
 
+    //BSON jackson plugin
     compile 'de.undercouch:bson4jackson:2.9.2'
 
     compile project("api")

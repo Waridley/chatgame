@@ -5,7 +5,9 @@ import com.waridley.chatgame.game.Game;
 import com.waridley.chatgame.ttv_chat_client.TwitchChatGameClient;
 import com.waridley.ttv.TtvStorageInterface;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class GameServer {
 	
 	private Game game;
@@ -36,8 +38,7 @@ public class GameServer {
 		if(sclOpts.isEnabled()) {
 			socketCommandListener = new SocketCommandListener(new EmbeddedCommandMediator(commandExecutive), sclOpts);
 		}
-		System.out.println("Started game server with options: " + options.toString());
+		log.info("Started game server with options: " + options.toString());
 	}
-	
 	
 }

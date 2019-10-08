@@ -1,4 +1,4 @@
-package com.waridley.credentials;
+package com.waridley.ttv;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

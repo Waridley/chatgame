@@ -8,7 +8,9 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import com.waridley.chatgame.api.backend.GameStorageInterface;
+import com.waridley.chatgame.game.GameObject;
 import com.waridley.chatgame.game.Player;
+import com.waridley.chatgame.game.inventory.Backpack;
 import com.waridley.mongo.MongoBackend;
 import com.waridley.ttv.TtvUser;
 import org.bson.Document;
@@ -87,6 +89,7 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 					Updates.setOnInsert(
 							new Document("ttvUserId", ttvUser.getId())
 								.append("username", ttvUser.getHelixUser().getDisplayName())
+								.append("backpack", new Backpack())
 						),
 						new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
 					);
@@ -97,6 +100,7 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 		}
 		return player;
 	}
+	
 	@Override
 	public Player findOrCreatePlayer(long ttvUserId) {
 		Player player = checkCacheFor(ttvUserId);
@@ -110,11 +114,22 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 			for(User user : userList.getUsers()) {
 				ttvUser = new TtvUser(user);
 			}
-			player = playerView.findOneAndUpdate(
-					Filters.eq("ttvUser._id", ttvUserId),
-					Updates.setOnInsert(new Document("ttvUser", ttvUser)),
-					new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-			);
+			
+			if(ttvUser != null) {
+				Document playerDoc = playerCollection.findOneAndUpdate(
+						Filters.eq("ttvUserId", ttvUser.getId()),
+						Updates.setOnInsert(
+								new Document("ttvUserId", ttvUser.getId())
+										.append("username", ttvUser.getHelixUser().getDisplayName())
+										.append("backpack", new Backpack())
+						),
+						new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+				);
+				if(playerDoc != null) {
+					player = playerView.find(Filters.eq("_id", playerDoc.get("_id"))).first();
+				}
+			}
+			if(player != null) playerCache.put(player.getId(), player);
 		}
 		
 		return player;
@@ -136,12 +151,20 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 				for(User user : userList.getUsers()) {
 					ttvUser = new TtvUser(user);
 				}
-				player = playerView.findOneAndUpdate(
+				Document playerDoc = playerCollection.findOneAndUpdate(
 						Filters.eq("username", username),
-						Updates.setOnInsert(new Document("ttvUser", ttvUser)),
+						Updates.setOnInsert(
+								new Document("ttvUserId", ttvUser != null ? ttvUser.getId() : null)
+										.append("username", username)
+										.append("backpack", new Backpack())
+						),
 						new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
 				);
+				if(playerDoc != null) {
+					player = playerView.find(Filters.eq("_id", playerDoc.get("_id"))).first();
+				}
 			}
+			if(player != null) playerCache.put(player.getId(), player);
 			
 		}
 		return player;

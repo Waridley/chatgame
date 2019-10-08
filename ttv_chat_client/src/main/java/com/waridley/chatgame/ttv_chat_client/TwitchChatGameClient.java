@@ -6,7 +6,6 @@
 package com.waridley.chatgame.ttv_chat_client;
 
 import com.github.philippheuer.credentialmanager.CredentialManager;
-import com.github.philippheuer.credentialmanager.api.IStorageBackend;
 import com.github.philippheuer.credentialmanager.domain.Credential;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider;
@@ -17,10 +16,12 @@ import com.github.twitch4j.chat.events.channel.ChannelJoinEvent;
 import com.github.twitch4j.chat.events.channel.ChannelLeaveEvent;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import com.waridley.chatgame.api.frontend.GameClient;
 import com.waridley.chatgame.api.frontend.CommandMediator;
-import com.waridley.credentials.NamedOAuth2Credential;
-import com.waridley.credentials.RefreshingProvider;
+import com.waridley.chatgame.api.frontend.GameClient;
+import com.waridley.credentials.NamedCredentialStorageBackend;
+import com.waridley.ttv.RefreshingProvider;
+import com.waridley.ttv.DeletableChannelMessageEvent;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -28,17 +29,16 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 public class TwitchChatGameClient implements GameClient {
+	private static final Logger log = org.slf4j.LoggerFactory.getLogger(TwitchChatGameClient.class);
 	private String channelName;
 	
 	private TwitchChat twitchChat;
 	public TwitchChat getTwitchChat() { return twitchChat; }
 	
-	private IStorageBackend credentialStorage;
+	private NamedCredentialStorageBackend credentialStorage;
 	private CommandMediator commandMediator;
 	
 	private CredentialManager credentialManager;
@@ -52,39 +52,41 @@ public class TwitchChatGameClient implements GameClient {
 		
 		this.credentialManager = provider.getCredentialManager();
 		this.channelName = channelName;
-		this.credentialStorage = provider.getCredentialManager().getStorageBackend();
+		this.credentialStorage = (NamedCredentialStorageBackend) provider.getCredentialManager().getStorageBackend();
 		this.identityProvider = provider;
 		this.commandMediator = commandMediator;
 		
 	}
 	
 	public void start() {
-		System.out.println("Starting Twitch Chat Game Client");
+		log.info("Starting Twitch Chat Game Client");
 		waitForCredential();
 	}
 	
 	private void waitForCredential() {
-		List<Credential> credentials = credentialStorage.loadCredentials();
-		Optional<NamedOAuth2Credential> botCredOpt = Optional.empty();
-		for(Credential c : credentials) {
-			if(c instanceof NamedOAuth2Credential) {
-				if(((NamedOAuth2Credential) c).getName().equals("botCredential")) botCredOpt = Optional.of((NamedOAuth2Credential) c);
-			}
-		}
+//		List<Credential> credentials = credentialStorage.loadCredentials();
+//		Optional<NamedOAuth2Credential> botCredOpt = Optional.empty();
+//		for(Credential c : credentials) {
+//			if(c instanceof NamedOAuth2Credential) {
+//				if(((NamedOAuth2Credential) c).getName().equals("botCredential")) botCredOpt = Optional.of((NamedOAuth2Credential) c);
+//			}
+//		}
+		
+		Optional<Credential> botCredOpt = credentialStorage.getCredentialByName("botCredential");
 		
 		if(botCredOpt.isPresent()) {
-			System.out.println("Found bot credential.");
-			OAuth2Credential credential = botCredOpt.get().getCredential();
+			log.info("Found bot credential.");
+			OAuth2Credential credential = (OAuth2Credential) botCredOpt.get();
 			Optional<OAuth2Credential> refreshedCredOpt = ((RefreshingProvider) identityProvider).refreshCredential(credential);
 			if(refreshedCredOpt.isPresent()) {
 				credential = refreshedCredOpt.get();
-				System.out.println("Successfully refreshed token");
+				log.info("Successfully refreshed token");
 			} else {
 				System.err.println("Failed to refresh token. Delete the credential from storage to generate a new one.");
 			}
 			buildChat(credential);
 		} else {
-			System.out.println("No saved bot credential found. Starting OAuth2 Authorization Code Flow.");
+			log.info("No saved bot credential found. Starting OAuth2 Authorization Code Flow.");
 			try {
 				getNewCredential();
 			} catch(IOException e) {
@@ -144,16 +146,14 @@ public class TwitchChatGameClient implements GameClient {
 		String code = null;
 		
 		URI uri = exchange.getRequestURI();
-		String response = new StringBuilder()
-				.append("<html>")
-				.append("<head>")
-				.append("</head>")
-				.append("<body>")
-				.append("<h1>Success!</h1>")
-				.append("Received authorization code. Getting token and joining chat.")
-				.append("</body>")
-				.append("</html>")
-				.toString();
+		String response = "<html>" +
+				"<head>" +
+				"</head>" +
+				"<body>" +
+				"<h1>Success!</h1>" +
+				"Received authorization code. Getting token and joining chat." +
+				"</body>" +
+				"</html>";
 		try {
 			exchange.sendResponseHeaders(200, response.length());
 			exchange.getResponseBody().write(response.getBytes());
@@ -179,9 +179,9 @@ public class TwitchChatGameClient implements GameClient {
 	private void buildChat(OAuth2Credential credential) {
 		Optional<OAuth2Credential> c = identityProvider.getAdditionalCredentialInformation(credential);
 		if(c.isPresent()) credential = c.get();
-		NamedOAuth2Credential botCredential = new NamedOAuth2Credential("botCredential", credential);
-		credentialStorage.saveCredentials(Collections.singletonList(botCredential));
-		System.out.println("Saved bot credential for " + credential.getUserName());
+//		NamedOAuth2Credential botCredential = new NamedOAuth2Credential("botCredential", credential);
+		credentialStorage.saveCredential("botCredential", credential);
+		log.info("Saved bot credential for " + credential.getUserName());
 		twitchChat = TwitchChatBuilder.builder()
 				.withCredentialManager(credentialManager)
 				.withChatAccount(credential)
@@ -190,22 +190,22 @@ public class TwitchChatGameClient implements GameClient {
 		
 		
 		CommandDispatcher commandDispatcher = new CommandDispatcher(twitchChat.getEventManager());
-		CommandExecutor commandExecutor = new CommandExecutor(twitchChat.getEventManager(), commandMediator);
+		CommandParser commandParser = new CommandParser(twitchChat.getEventManager(), commandMediator);
 		twitchChat.getEventManager().onEvent(ChannelJoinEvent.class).subscribe(this::userJoined);
 		twitchChat.getEventManager().onEvent(ChannelLeaveEvent.class).subscribe(this::userLeft);
 		
-		System.out.println("Joined channel: " + channelName);
+		log.info("Joined channel: " + channelName);
 		twitchChat.sendMessage(channelName, "I'm here! TwitchRPG");
 		
 	}
 	
 	
 	private void userJoined(ChannelJoinEvent event) {
-		//System.out.println(event.getUser().getName() + " just joined this channel!");
+		//log.info(event.getUser().getName() + " just joined this channel!");
 	}
 	
 	private void userLeft(ChannelLeaveEvent event) {
-		System.out.println("Someone just left this channel snowpoSOB");
+//		log.info("Someone just left this channel snowpoSOB");
 	}
 	
 }

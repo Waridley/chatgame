@@ -5,7 +5,12 @@
 
 package com.waridley.chatgame.game.inventory;
 
+import lombok.Data;
+
+@Data
 public class Backpack {
-	ItemContainer space;
 	
+	private ItemContainer mainPouch = new ItemContainer();
+	
+	private CurrencyContainer currencyPouch = new CurrencyContainer();
 }

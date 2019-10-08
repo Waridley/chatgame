@@ -5,6 +5,12 @@
 
 package com.waridley.chatgame.game.inventory;
 
-public class CurrencyContainer {
+import com.waridley.chatgame.game.currency.Coins;
+import com.waridley.chatgame.game.currency.Gems;
+import lombok.Data;
 
+@Data
+public class CurrencyContainer {
+	private Coins coins = new Coins();
+	private Gems gems = new Gems();
 }

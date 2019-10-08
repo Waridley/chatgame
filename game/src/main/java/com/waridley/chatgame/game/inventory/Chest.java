@@ -5,7 +5,10 @@
 
 package com.waridley.chatgame.game.inventory;
 
+import lombok.Data;
+
+@Data
 public class Chest {
-	ItemContainer space;
+	ItemContainer inside;
 	
 }
