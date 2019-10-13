@@ -12,7 +12,7 @@ import com.waridley.chatgame.api.frontend.CommandMediator;
 import com.waridley.ttv.CommandEvent;
 import org.slf4j.Logger;
 
-public class CommandParser {
+class CommandParser {
 	
 	private static final Logger log = org.slf4j.LoggerFactory.getLogger(TwitchChatGameClient.class);;
 	private EventManager eventManager;
@@ -20,7 +20,7 @@ public class CommandParser {
 	private InfoCommands info;
 	private String channelName;
 	
-	public CommandParser(EventManager eventManager, CommandMediator commandMediator) {
+	CommandParser(EventManager eventManager, CommandMediator commandMediator) {
 		this.eventManager = eventManager;
 		this.eventManager.onEvent(CommandEvent.class).subscribe(this::onCommand);
 		this.commandMediator = commandMediator;
@@ -54,17 +54,14 @@ public class CommandParser {
 		String argString = event.getArguments();
 		
 		switch(command) {
-			case("echo"):
-				event.respondToUser(argString);
-				break;
-			case("hours"):
-				info.stats.hours(event);
-				break;
+//			case("echo"):
+//				event.respondToUser(argString);
+//				break;
+//			case("hours"):
+//				info.stats.hours(event);
+//				break;
 			case("loop"):
 				if(event.getPermissions().contains(CommandPermission.BROADCASTER)) event.respondToUser("!loop");
-				break;
-			case("snowflake"):
-				event.respondToUser("\u2744\uFE0F");
 				break;
 			case("coins"):
 				info.currency.coins(event);

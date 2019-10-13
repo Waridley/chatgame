@@ -195,7 +195,7 @@ public class TwitchChatGameClient implements GameClient {
 		twitchChat.getEventManager().onEvent(ChannelLeaveEvent.class).subscribe(this::userLeft);
 		
 		log.info("Joined channel: " + channelName);
-		twitchChat.sendMessage(channelName, "I'm here! TwitchRPG");
+		twitchChat.sendMessage(channelName, "The game has started! TwitchRPG");
 		
 	}
 	
