@@ -29,7 +29,7 @@ public class CommandExecutive {
 		private GameStorageInterface gameStorageInterface;
 		
 		TtvUser ttvUserFromLogin(String login) {
-			return ttvStorageInterface.findOrCreateTtvUser(login);
+			return ttvStorageInterface.findOrCreateTtvUserFromLogin(login);
 		}
 		
 		Player playerFromTtvUser(TtvUser ttvUser) {
@@ -37,7 +37,7 @@ public class CommandExecutive {
 		}
 		
 		Player playerFromTtvUserId(String userId) {
-			return gameStorageInterface.findOrCreatePlayer(Long.parseLong(userId));
+			return gameStorageInterface.findOrCreatePlayerByTtvId(userId);
 		}
 	}
 	

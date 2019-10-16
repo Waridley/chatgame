@@ -4,13 +4,14 @@ import com.github.twitch4j.helix.domain.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
 @NoArgsConstructor
 public class TtvUser {
 	
-	private long id = -1L;
+	private String id = "";
 	
 	private User helixUser = null;
 	
@@ -20,6 +21,16 @@ public class TtvUser {
 	
 	private long guestMinutes = 0L;
 	
+	private Map<String, Object> properties = new HashMap<>();
+	
+	private Object getProperty(String name) {
+		return properties.get(name);
+	}
+	
+	private void setProperty(String name, Object value) {
+		properties.put(name, value);
+	}
+	
 	public TtvUser(User helixUser) {
 		setHelixUser(helixUser);
 		setId(helixUser.getId());
@@ -27,15 +38,5 @@ public class TtvUser {
 	
 	public long channelMinutes() { return onlineMinutes + offlineMinutes; }
 	public long totalMinutes() { return onlineMinutes + offlineMinutes + guestMinutes; }
-	
-	private Map<String, Object> properties ;
-	
-	private Object getProperty(String key) {
-		return properties.get(key);
-	}
-	
-	private void setProperty(String key, Object value) {
-		properties.put(key, value);
-	}
 	
 }

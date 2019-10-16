@@ -20,7 +20,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.10'
     annotationProcessor 'org.projectlombok:lombok:1.18.10'
 
-    compile group: 'com.github.twitch4j', name: 'twitch4j', version: '1.0.0-alpha.16'
+    compile group: 'com.github.twitch4j', name: 'twitch4j', version: '1.0.0-alpha.17'
 
     compile project(":ttv")
 }

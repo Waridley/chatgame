@@ -16,7 +16,7 @@ public interface GameStorageInterface {
 	 */
 	Player findOrCreatePlayer(TtvUser ttvUser);
 	
-	Player findOrCreatePlayer(long ttvUserId);
+	Player findOrCreatePlayerByTtvId(String ttvUserId);
 	
 	/**
 	 * Find a Player record, or create a new account if none exists.

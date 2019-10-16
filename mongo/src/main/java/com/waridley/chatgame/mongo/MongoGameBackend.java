@@ -8,7 +8,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import com.waridley.chatgame.api.backend.GameStorageInterface;
-import com.waridley.chatgame.game.GameObject;
 import com.waridley.chatgame.game.Player;
 import com.waridley.chatgame.game.inventory.Backpack;
 import com.waridley.mongo.MongoBackend;
@@ -19,7 +18,6 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.Convention;
 import org.bson.codecs.pojo.Conventions;
 import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import java.util.*;
@@ -101,8 +99,8 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 	}
 	
 	@Override
-	public Player findOrCreatePlayer(long ttvUserId) {
-		Player player = checkCacheFor(ttvUserId);
+	public Player findOrCreatePlayerByTtvId(String ttvUserId) {
+		Player player = checkCacheForUsername(ttvUserId);
 		if(player == null) {
 			TtvUser ttvUser = null;
 			UserList userList = helix.getUsers(
@@ -137,7 +135,7 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 	@Override
 	public Player findOrCreatePlayer(String username) {
 		System.out.println("Looking for player " + username);
-		Player player = checkCacheFor(username);
+		Player player = checkCacheForUsername(username);
 		if(player == null) {
 			player = playerView.find(Filters.eq("username", username)).first();
 			if(player == null) {
@@ -183,7 +181,7 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 	
 	@Override
 	public Optional<Player> findPlayer(String username) {
-		Player player = checkCacheFor(username);
+		Player player = checkCacheForUsername(username);
 		if(player == null) {
 			player = playerView.find(Filters.eq("username", username)).first();
 			if(player != null) playerCache.put(player.getId(), player);
@@ -237,7 +235,7 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 		return player;
 	}
 	
-	private Player checkCacheFor(String username) {
+	private Player checkCacheForUsername(String username) {
 		Player player = null;
 		for(Player p : playerCache.values()) {
 			if(p.getUsername().equals(username)) {
@@ -248,10 +246,10 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 		return player;
 	}
 	
-	private Player checkCacheFor(long ttvUserId) {
+	private Player checkCacheForId(String ttvUserId) {
 		Player player = null;
 		for(Player p : playerCache.values()) {
-			if(p.getTtvUser().getId() == ttvUserId) {
+			if(p.getTtvUser().getId().equals(ttvUserId)) {
 				if(player == null) player = p;
 				else throw new RuntimeException("Found more than one player for Twitch user ID " + ttvUserId);
 			}
