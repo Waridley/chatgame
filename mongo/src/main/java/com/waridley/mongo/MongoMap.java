@@ -16,16 +16,16 @@ import java.util.Map;
 import java.util.Set;
 
 public class MongoMap<V> extends AbstractMap<String, V> {
-	
+
 	private Map<String, V> cache = new HashMap<>();
 	private Class<V> valueClass;
 	private MongoCollection<Document> collection;
-	
+
 	public MongoMap(MongoCollection<Document> collection, Class<V> valueClass) {
 		this.valueClass = valueClass;
 		this.collection = collection;
 	}
-	
+
 	@Override
 	public V put(String key, Object value) {
 		Document storedMap = collection.findOneAndUpdate(
@@ -45,7 +45,7 @@ public class MongoMap<V> extends AbstractMap<String, V> {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public Set<Entry<String, V>> entrySet() {
 		FindIterable<Document> mapDocs = collection.find(Filters.eq("valueClass", valueClass.toString()), Document.class);
@@ -61,10 +61,10 @@ public class MongoMap<V> extends AbstractMap<String, V> {
 				}
 			}
 		}
-		
+
 		return cache.entrySet();
 	}
-	
+
 	@Override
 	public V get(Object key) {
 		Document doc = collection.find(
@@ -82,5 +82,5 @@ public class MongoMap<V> extends AbstractMap<String, V> {
 			return null;
 		}
 	}
-	
+
 }

@@ -21,37 +21,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+package com.waridley.credentials
 
-package com.waridley.credentials;
-
-import com.github.philippheuer.credentialmanager.domain.AuthenticationController;
-import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider;
-
-import java.awt.*;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+import com.github.philippheuer.credentialmanager.domain.AuthenticationController
+import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider
+import java.awt.Desktop
+import java.io.IOException
+import java.net.URI
+import java.net.URISyntaxException
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 /**
  * An AuthenticationController which uses java.awt.Desktop.browse() to send the user to the identity provider's authentication URL.
  * If Desktop is not supported, it will print an error telling the user they may be able to paste the URL in a browser to continue authentication.
  */
-public class DesktopAuthController extends AuthenticationController {
-	
+class DesktopAuthController : AuthenticationController {
 	/**
 	 * The URI of an info page that redirects the user to the authentication URL after giving them some explanation.
 	 */
-	protected URI infoURI;
+	protected var infoURI: URI?
 	
 	/**
 	 * Creates a DesktopAuthenticationController with no infoURL.
 	 * The user will be directed straight to the identity provider's authentication URL.
 	 */
-	public DesktopAuthController() {
-		this.infoURI = null;
+	constructor() {
+		infoURI = null
 	}
 	
 	/**
@@ -61,47 +57,40 @@ public class DesktopAuthController extends AuthenticationController {
 	 * @param infoURL The URL of the page to send the user to first
 	 * @throws URISyntaxException if a URI can't be created with infoURL
 	 */
-	public DesktopAuthController(String infoURL) throws URISyntaxException {
-		this.infoURI = new URI(infoURL);
+	constructor(infoURL: String?) {
+		infoURI = URI(infoURL)
 	}
 	
-	@Override
-	public void startOAuth2AuthorizationCodeGrantType(OAuth2IdentityProvider provider, String redirectUrl, List<Object> scopes) {
-		//getAuthenticationUrl() does not URL-encode the scopes for some reason
-		String authURL = provider.getAuthenticationUrl(redirectUrl, scopes, null);
-//				.replace(' ', '+'); //set scopeSeparator to "+" in RefreshingProvider for testing
-		
+	override fun startOAuth2AuthorizationCodeGrantType(provider: OAuth2IdentityProvider, redirectUrl: String, scopes: List<Any>) { //getAuthenticationUrl() does not URL-encode the scopes for some reason
+		val authURL = provider.getAuthenticationUrl(redirectUrl, scopes, null)
+		//				.replace(' ', '+'); //set scopeSeparator to "+" in RefreshingProvider for testing
 		try {
-			URI browseURI;
-			if(infoURI != null) { //infoURI is present, send user there instead of directly to auth page
-				//get parts of infoURI in order to add authURL to query
-				String scheme = infoURI.getScheme();
-				String userInfo = infoURI.getUserInfo();
-				String host = infoURI.getHost();
-				int port = infoURI.getPort();
-				String path = infoURI.getPath();
-				String query = infoURI.getQuery();
-				String fragment = infoURI.getFragment();
-				
+			val browseURI: URI
+			if (infoURI != null) { //infoURI is present, send user there instead of directly to auth page
+//get parts of infoURI in order to add authURL to query
+				val scheme = infoURI!!.scheme
+				val userInfo = infoURI!!.userInfo
+				val host = infoURI!!.host
+				val port = infoURI!!.port
+				val path = infoURI!!.path
+				var query = infoURI!!.query
+				val fragment = infoURI!!.fragment
 				//add authURL to query
-				if(query == null) query = "";
-				else query += "&";
-				query += "authurl=" + URLEncoder.encode(authURL, StandardCharsets.UTF_8.toString());
-				
-				browseURI = new URI(scheme, userInfo, host, port, path, query, fragment);
+				if (query == null) query = "" else query += "&"
+				query += "authurl=" + URLEncoder.encode(authURL, StandardCharsets.UTF_8.toString())
+				browseURI = URI(scheme, userInfo, host, port, path, query, fragment)
 			} else { //no infoURI present, send user to auth page
-				browseURI = new URI(authURL);
+				browseURI = URI(authURL)
 			}
-			
 			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-				Desktop.getDesktop().browse(browseURI);
+				Desktop.getDesktop().browse(browseURI)
 			} else {
-				handleDesktopUnsupported(browseURI);
+				handleDesktopUnsupported(browseURI)
 			}
-		} catch(URISyntaxException e) {
-			handle(e);
-		} catch(IOException e) {
-			handle(e);
+		} catch (e: URISyntaxException) {
+			handle(e)
+		} catch (e: IOException) {
+			handle(e)
 		}
 	}
 	
@@ -111,13 +100,13 @@ public class DesktopAuthController extends AuthenticationController {
 	 *
 	 * @param browseURI The URI that would have been passed to Desktop.browse()
 	 */
-	protected void handleDesktopUnsupported(URI browseURI) {
+	protected fun handleDesktopUnsupported(browseURI: URI) {
 		System.err.println(
 				"Desktop is not supported! Cannot open browser for authentication.\n" +
 						"You can paste the following URL into a web browser:\n\n" +
 						"  " + browseURI.toString() + "\n\n" +
 						"and if you are able to reach that page, then you may still be able to log in to your account."
-		);
+		)
 	}
 	
 	/**
@@ -125,8 +114,8 @@ public class DesktopAuthController extends AuthenticationController {
 	 *
 	 * @param e The IOException thrown by startOAuth2AuthorizationCodeGrantType()
 	 */
-	protected void handle(URISyntaxException e) {
-		e.printStackTrace();
+	protected fun handle(e: URISyntaxException) {
+		e.printStackTrace()
 	}
 	
 	/**
@@ -134,7 +123,7 @@ public class DesktopAuthController extends AuthenticationController {
 	 *
 	 * @param e The IOException thrown by startOAuth2AuthorizationCodeGrantType()
 	 */
-	protected void handle(IOException e) {
-		e.printStackTrace();
+	protected fun handle(e: IOException) {
+		e.printStackTrace()
 	}
 }

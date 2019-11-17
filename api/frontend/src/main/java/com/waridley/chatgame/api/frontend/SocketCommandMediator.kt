@@ -1,17 +1,13 @@
-package com.waridley.chatgame.api.frontend;
+package com.waridley.chatgame.api.frontend
 
-import com.waridley.chatgame.game.Player;
+import com.waridley.chatgame.game.Player
 
-public class SocketCommandMediator implements CommandMediator {
-	
-	
-	@Override
-	public Player getPlayerByTtvLogin(String login) {
-		return null;
+class SocketCommandMediator : CommandMediator {
+	override fun getPlayerByTtvLogin(login: String?): Player? {
+		return null
 	}
 	
-	@Override
-	public Player getPlayerByTtvUserId(String userId) {
-		return null;
+	override fun getPlayerByTtvUserId(userId: String?): Player? {
+		return null
 	}
 }

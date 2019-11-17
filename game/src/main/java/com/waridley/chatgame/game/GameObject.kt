@@ -1,26 +1,21 @@
-package com.waridley.chatgame.game;
+package com.waridley.chatgame.game
 
-import lombok.Data;
-import org.bson.codecs.pojo.annotations.BsonIgnore;
-
-import java.util.Collections;
-import java.util.List;
+import lombok.Data
+import org.bson.codecs.pojo.annotations.BsonIgnore
 
 @Data
-public class GameObject {
-	
+open class GameObject {
 	@BsonIgnore
-	protected GameObject parent = null;
-	
-	protected List<GameObject> children = Collections.emptyList();
-	
+	protected var parent: GameObject? = null
+	protected var children: List<GameObject> = emptyList()
 	@BsonIgnore
-	private void addChild(GameObject child) throws Exception {
-		if(child.parent == null) {
-			children.add(child);
-			child.parent = this;
+	@Throws(Exception::class)
+	private fun addChild(child: GameObject) {
+		if (child.parent == null) {
+			children.add(child)
+			child.parent = this
 		} else {
-			throw new Exception("Cannot claim child -- child already has a parent!");
+			throw Exception("Cannot claim child -- child already has a parent!")
 		}
 	}
 }

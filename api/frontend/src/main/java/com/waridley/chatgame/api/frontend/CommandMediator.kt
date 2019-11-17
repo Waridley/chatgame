@@ -1,11 +1,8 @@
-package com.waridley.chatgame.api.frontend;
+package com.waridley.chatgame.api.frontend
 
-import com.waridley.chatgame.game.Player;
+import com.waridley.chatgame.game.Player
 
-public interface CommandMediator {
-	
-	Player getPlayerByTtvLogin(String login);
-	
-	Player getPlayerByTtvUserId(String userId);
-	
+interface CommandMediator {
+	fun getPlayerByTtvLogin(login: String?): Player?
+	fun getPlayerByTtvUserId(userId: String?): Player?
 }

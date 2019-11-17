@@ -1,6 +1,5 @@
-package com.waridley.chatgame.api.frontend;
+package com.waridley.chatgame.api.frontend
 
-public interface GameClient {
-	
-	void start();
+interface GameClient {
+	fun start()
 }

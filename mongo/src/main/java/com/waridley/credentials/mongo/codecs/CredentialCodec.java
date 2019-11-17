@@ -15,32 +15,32 @@ import org.bson.codecs.configuration.CodecRegistry;
 import java.util.*;
 
 public class CredentialCodec implements Codec<Credential> {
-	
+
 	private CodecRegistry codecRegistry;
-	
+
 	public CredentialCodec(CodecRegistry codecRegistry) {
 		this.codecRegistry = codecRegistry;
 	}
-	
+
 	@Override
 	public Credential decode(BsonReader reader, DecoderContext decoderContext) {
 		Credential credential = null;
 		String userId = null;
 		String identityProvider = null;
 		Map<String, Object> additionalValues = new HashMap<>();
-		
+
 		Optional<String> name = Optional.empty();
 		Optional<OAuth2Credential> oAuth2Credential = Optional.empty();
-		
+
 		Optional<String> accessToken = Optional.empty();
 		Optional<String> refreshToken = Optional.empty();
 		Optional<String> userName = Optional.empty();
 		Optional<Integer> expiresIn = Optional.empty();
 		List<String> scopes = new ArrayList<>();
-		
+
 		reader.readStartDocument();
 		while(reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-			
+
 			String fieldName = reader.readName();
 			switch(fieldName) {
 				case("userId"):
@@ -76,10 +76,10 @@ public class CredentialCodec implements Codec<Credential> {
 					reader.skipValue();
 					//readAdditionalValues(reader, fieldName, decoderContext, additionalValues);
 			}
-			
+
 		}
 		reader.readEndDocument();
-		
+
 //		if(name.isPresent()) {
 //			credential = new NamedOAuth2Credential(name.get(), oAuth2Credential.orElse(null));
 //		} else
@@ -97,10 +97,10 @@ public class CredentialCodec implements Codec<Credential> {
 		} else {
 			credential = new Credential(userId, identityProvider) { };
 		}
-		
+
 		return credential;
 	}
-	
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public void encode(BsonWriter writer, Credential credential, EncoderContext encoderContext) {
@@ -116,9 +116,9 @@ public class CredentialCodec implements Codec<Credential> {
 		} else {
 			encodeCredentialInterface(writer, credential, encoderContext);
 		}
-		
+
 	}
-	
+
 	private void encodeCredentialInterface(BsonWriter writer, Credential credential, EncoderContext encoderContext) {
 		writer.writeStartDocument();
 		if(credential.getUserId() != null) {
@@ -131,12 +131,12 @@ public class CredentialCodec implements Codec<Credential> {
 		}
 		writer.writeEndDocument();
 	}
-	
+
 	@Override
 	public Class<Credential> getEncoderClass() {
 		return Credential.class;
 	}
-	
+
 	private void readAdditionalValues(BsonReader reader, String fieldName, DecoderContext decoderContext, Map<String, Object> additionalValues) {
 		if(reader.getCurrentBsonType() == BsonType.OBJECT_ID) additionalValues.put(fieldName, reader.readObjectId());
 		else if(reader.getCurrentBsonType() == BsonType.STRING) additionalValues.put(fieldName, reader.readString());
@@ -170,11 +170,11 @@ public class CredentialCodec implements Codec<Credential> {
 		}
 		else { reader.skipValue(); }
 	}
-	
+
 }
 
 class UnknownCredential extends Credential {
-	
+
 	Map<String, Object> additionalValues;
 	Map<String, Object> getAdditionalValues() { return additionalValues; }
 	/**

@@ -7,7 +7,7 @@ import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 
 public class CredentialCodecProvider implements CodecProvider {
-	
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
@@ -25,7 +25,7 @@ public class CredentialCodecProvider implements CodecProvider {
 		} else if(Credential.class.isAssignableFrom(clazz)) {
 			return (Codec<T>) new CredentialCodec(registry);
 		}
-		
+
 		return null;
 	}
 }

@@ -1,209 +1,160 @@
-package com.waridley.chatgame.mongo;
+package com.waridley.chatgame.mongo
 
-import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
-import com.github.twitch4j.helix.TwitchHelix;
-import com.github.twitch4j.helix.domain.User;
-import com.github.twitch4j.helix.domain.UserList;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.*;
-import com.waridley.chatgame.api.backend.GameStorageInterface;
-import com.waridley.chatgame.game.Player;
-import com.waridley.chatgame.game.inventory.Backpack;
-import com.waridley.mongo.MongoBackend;
-import com.waridley.ttv.TtvUser;
-import org.bson.Document;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.codecs.pojo.Convention;
-import org.bson.codecs.pojo.Conventions;
-import org.bson.codecs.pojo.PojoCodecProvider;
-import org.bson.types.ObjectId;
+import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
+import com.github.twitch4j.helix.TwitchHelix
+import com.mongodb.MongoClient
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoDatabase
+import com.mongodb.client.model.*
+import com.waridley.chatgame.api.backend.GameStorageInterface
+import com.waridley.chatgame.game.Player
+import com.waridley.chatgame.game.inventory.Backpack
+import com.waridley.mongo.MongoBackend
+import com.waridley.ttv.TtvUser
+import org.bson.Document
+import org.bson.codecs.configuration.CodecRegistries
+import org.bson.codecs.pojo.Convention
+import org.bson.codecs.pojo.Conventions
+import org.bson.codecs.pojo.PojoCodecProvider
+import org.bson.types.ObjectId
+import java.util.*
 
-import java.util.*;
-
-public class MongoGameBackend implements GameStorageInterface, MongoBackend {
-	
-	private MongoDatabase db;
-	
-	private MongoCollection<Document> playerCollection;
-	private MongoCollection<Player> playerView;
-	
-	public MongoCollection<Player> getPlayerCollection() {
-		return playerView;
-	}
-	
-	private Map<ObjectId, Player> playerCache = Collections.synchronizedSortedMap(new TreeMap<>());
-	private TwitchHelix helix;
-	private OAuth2Credential helixCredential;
-	
-	public MongoGameBackend(MongoDatabase db, TwitchHelix twitchHelix, OAuth2Credential helixCredential) {
-		this.db = db;
-		this.helix = twitchHelix;
-		this.helixCredential = helixCredential;
-		
-		List<Convention> conventions = new ArrayList<>(Conventions.DEFAULT_CONVENTIONS);
-		conventions.add(Conventions.SET_PRIVATE_FIELDS_CONVENTION);
-		PojoCodecProvider pojoCodecProvider = PojoCodecProvider.builder()
-				.automatic(true)
-				.conventions(conventions)
-				.build();
-		CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
-				com.mongodb.MongoClient.getDefaultCodecRegistry(),
-//				CodecRegistries.fromCodecs(new PlayerCodec()),
-				CodecRegistries.fromProviders(pojoCodecProvider)
-		);
-		
-		playerCollection = createCollectionIfNotExists("playerdata", Document.class).withCodecRegistry(codecRegistry);
-		playerView = createPlayerViewIfNotExists().withCodecRegistry(codecRegistry);
-	}
-	
-	private MongoCollection<Player> createPlayerViewIfNotExists() {
-		boolean viewExists = false;
-		for(String name : db.listCollectionNames()) {
-			if(name.equals("player_view")) {
-				viewExists = true;
-				break;
+class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchHelix, private val helixCredential: OAuth2Credential) : GameStorageInterface, MongoBackend {
+	private val playerCollection: MongoCollection<Document>
+	private val playerView: MongoCollection<Player?>
+	private val playerCache: MutableMap<ObjectId?, Player?> = Collections.synchronizedSortedMap(TreeMap<ObjectId, Player>())
+	private fun createPlayerViewIfNotExists(): MongoCollection<Player?> {
+		var viewExists = false
+		for (name in db.listCollectionNames()) {
+			if (name == "player_view") {
+				viewExists = true
+				break
 			}
 		}
-		if(!viewExists) db.createView(
+		if (!viewExists) db.createView(
 				"player_view",
 				"playerdata",
-				new ArrayList<>(Arrays.asList(Aggregates.lookup("ttv_users", "ttvUserId", "_id", "ttvUser"),
-						Aggregates.unwind("$ttvUser"),
-						Aggregates.project(new Document("ttvUserId", 0))))
-		);
-		return db.getCollection("player_view", Player.class);
+				ArrayList(Arrays.asList(Aggregates.lookup("ttv_users", "ttvUserId", "_id", "ttvUser"),
+						Aggregates.unwind("\$ttvUser"),
+						Aggregates.project(Document("ttvUserId", 0))))
+		)
+		return db.getCollection("player_view", Player::class.java)
 	}
 	
 	//region findOrCreatePlayer()
-	@Override
-	public Player findOrCreatePlayer(TtvUser ttvUser) {
-		Player player = checkCacheFor(ttvUser);
-		if(player == null) {
-			Document playerDoc = playerCollection.findOneAndUpdate(
-					Filters.eq("ttvUserId", ttvUser.getId()),
+	override fun findOrCreatePlayer(ttvUser: TtvUser?): Player? {
+		var player = checkCacheFor(ttvUser)
+		if (player == null) {
+			val playerDoc = playerCollection.findOneAndUpdate(
+					Filters.eq("ttvUserId", ttvUser!!.id),
 					Updates.setOnInsert(
-							new Document("ttvUserId", ttvUser.getId())
-								.append("username", ttvUser.getHelixUser().getDisplayName())
-								.append("backpack", new Backpack())
-						),
-						new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-					);
-			if(playerDoc != null) {
-				player = playerView.find(Filters.eq("_id", playerDoc.get("_id"))).first();
+							Document("ttvUserId", ttvUser.id)
+									.append("username", ttvUser.helixUser.displayName)
+									.append("backpack", Backpack())
+					),
+					FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+			)
+			if (playerDoc != null) {
+				player = playerView.find(Filters.eq("_id", playerDoc["_id"])).first()
 			}
-			if(player != null) playerCache.put(player.getId(), player);
+			if (player != null) playerCache[player.id] = player
 		}
-		return player;
+		return player
 	}
 	
-	@Override
-	public Player findOrCreatePlayerByTtvId(String ttvUserId) {
-		Player player = checkCacheForUsername(ttvUserId);
-		if(player == null) {
-			TtvUser ttvUser = null;
-			UserList userList = helix.getUsers(
-					helixCredential.getAccessToken(),
-					Collections.singletonList(ttvUserId),
+	override fun findOrCreatePlayerByTtvId(ttvUserId: String?): Player? {
+		var player = checkCacheForUsername(ttvUserId)
+		if (player == null) {
+			var ttvUser: TtvUser? = null
+			val userList = helix.getUsers(
+					helixCredential.accessToken, listOf(ttvUserId),
 					null
-			).execute();
-			for(User user : userList.getUsers()) {
-				ttvUser = new TtvUser(user);
+			).execute()
+			for (user in userList.users) {
+				ttvUser = TtvUser(user)
 			}
-			
-			if(ttvUser != null) {
-				Document playerDoc = playerCollection.findOneAndUpdate(
-						Filters.eq("ttvUserId", ttvUser.getId()),
+			if (ttvUser != null) {
+				val playerDoc = playerCollection.findOneAndUpdate(
+						Filters.eq("ttvUserId", ttvUser.id),
 						Updates.setOnInsert(
-								new Document("ttvUserId", ttvUser.getId())
-										.append("username", ttvUser.getHelixUser().getDisplayName())
-										.append("backpack", new Backpack())
+								Document("ttvUserId", ttvUser.id)
+										.append("username", ttvUser.helixUser.displayName)
+										.append("backpack", Backpack())
 						),
-						new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-				);
-				if(playerDoc != null) {
-					player = playerView.find(Filters.eq("_id", playerDoc.get("_id"))).first();
+						FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+				)
+				if (playerDoc != null) {
+					player = playerView.find(Filters.eq("_id", playerDoc["_id"])).first()
 				}
 			}
-			if(player != null) playerCache.put(player.getId(), player);
+			if (player != null) playerCache[player.id] = player
 		}
-		
-		return player;
+		return player
 	}
 	
-	@Override
-	public Player findOrCreatePlayer(String username) {
-		System.out.println("Looking for player " + username);
-		Player player = checkCacheForUsername(username);
-		if(player == null) {
-			player = playerView.find(Filters.eq("username", username)).first();
-			if(player == null) {
-				TtvUser ttvUser = null;
-				UserList userList = helix.getUsers(
-						helixCredential.getAccessToken(),
-						null,
-						Collections.singletonList(username)
-				).execute();
-				for(User user : userList.getUsers()) {
-					ttvUser = new TtvUser(user);
+	override fun findOrCreatePlayer(username: String?): Player? {
+		println("Looking for player $username")
+		var player = checkCacheForUsername(username)
+		if (player == null) {
+			player = playerView.find(Filters.eq("username", username)).first()
+			if (player == null) {
+				var ttvUser: TtvUser? = null
+				val userList = helix.getUsers(
+						helixCredential.accessToken,
+						null, listOf(username)).execute()
+				for (user in userList.users) {
+					ttvUser = TtvUser(user)
 				}
-				Document playerDoc = playerCollection.findOneAndUpdate(
+				val playerDoc = playerCollection.findOneAndUpdate(
 						Filters.eq("username", username),
 						Updates.setOnInsert(
-								new Document("ttvUserId", ttvUser != null ? ttvUser.getId() : null)
+								Document("ttvUserId", ttvUser?.id)
 										.append("username", username)
-										.append("backpack", new Backpack())
+										.append("backpack", Backpack())
 						),
-						new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-				);
-				if(playerDoc != null) {
-					player = playerView.find(Filters.eq("_id", playerDoc.get("_id"))).first();
+						FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+				)
+				if (playerDoc != null) {
+					player = playerView.find(Filters.eq("_id", playerDoc["_id"])).first()
 				}
 			}
-			if(player != null) playerCache.put(player.getId(), player);
-			
+			if (player != null) playerCache[player.id] = player
 		}
-		return player;
+		return player
 	}
+	
 	//endregion
-	
-	//region findPlayer()
-	@Override
-	public Optional<Player> findPlayer(TtvUser ttvUser) {
-		Player player = checkCacheFor(ttvUser);
-		if(player == null) {
-			player = playerView.find(Filters.eq("ttvUser._id", ttvUser.getId())).first();
-			if(player != null) playerCache.put(player.getId(), player);
+//region findPlayer()
+	override fun findPlayer(ttvUser: TtvUser?): Player? {
+		var player = checkCacheFor(ttvUser)
+		if (player == null) {
+			player = playerView.find(Filters.eq("ttvUser._id", ttvUser!!.id)).first()
+			if (player != null) playerCache[player.id] = player
 		}
-		return Optional.ofNullable(player);
+		return player
 	}
 	
-	@Override
-	public Optional<Player> findPlayer(String username) {
-		Player player = checkCacheForUsername(username);
-		if(player == null) {
-			player = playerView.find(Filters.eq("username", username)).first();
-			if(player != null) playerCache.put(player.getId(), player);
+	override fun findPlayer(username: String?): Player? {
+		var player = checkCacheForUsername(username)
+		if (player == null) {
+			player = playerView.find(Filters.eq("username", username)).first()
+			if (player != null) playerCache[player.id] = player
 		}
-		return Optional.ofNullable(player);
+		return player
 	}
 	
-	@Override
-	public Optional<Player> findPlayer(ObjectId id) {
-		Player player = playerCache.get(id);
-		if(player == null) {
-			player = playerView.find(Filters.eq("_id", id)).first();
-			if(player != null) playerCache.put(player.getId(), player);
+	override fun findPlayer(id: ObjectId?): Player? {
+		var player = playerCache[id]
+		if (player == null) {
+			player = playerView.find(Filters.eq("_id", id)).first()
+			if (player != null) playerCache[player.id] = player
 		}
-		return Optional.ofNullable(player);
+		return player
 	}
+	
 	//endregion
-	
-	@Override
-	public Player logMinutes(Player player, long minutes, boolean online) {
-		//TODO implement player watchtime logging
-		return null;
+	override fun logMinutes(player: Player?, minutes: Long, online: Boolean): Player? { //TODO implement player watchtime logging
+		return null
 	}
 	
 	/**
@@ -212,55 +163,63 @@ public class MongoGameBackend implements GameStorageInterface, MongoBackend {
 	 * @param player The player to save
 	 * @return The saved player
 	 */
-	@Override
-	public Player savePlayer(Player player) {
-		Player result = playerView.findOneAndReplace(
-				Filters.eq("_id", player.getId()),
+	override fun savePlayer(player: Player?): Player? {
+		val result = playerView.findOneAndReplace(
+				Filters.eq("_id", player!!.id),
 				player,
-				new FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-				);
-		if(result != null) playerCache.put(player.getId(), player);
-		return result;
+				FindOneAndReplaceOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+		)
+		if (result != null) playerCache[player.id] = player
+		return result
 	}
 	
 	//region checkCacheFor()
-	private Player checkCacheFor(TtvUser ttvUser) {
-		Player player = null;
-		for(Player p : playerCache.values()) {
-			if(p.getTtvUser().equals(ttvUser)) {
-				if(player == null) player = p;
-				else throw new RuntimeException("Found more than one player for Twitch user ID " + ttvUser.getId());
+	private fun checkCacheFor(ttvUser: TtvUser?): Player? {
+		var player: Player? = null
+		for (p in playerCache.values) {
+			if (p!!.ttvUser == ttvUser) {
+				player = if (player == null) p else throw RuntimeException("Found more than one player for Twitch user ID " + ttvUser!!.id)
 			}
 		}
-		return player;
+		return player
 	}
 	
-	private Player checkCacheForUsername(String username) {
-		Player player = null;
-		for(Player p : playerCache.values()) {
-			if(p.getUsername().equals(username)) {
-				if(player == null) player = p;
-				else throw new RuntimeException("Found more than one player for username " + username);
+	private fun checkCacheForUsername(username: String?): Player? {
+		var player: Player? = null
+		for (p in playerCache.values) {
+			if (p!!.username == username) {
+				player = if (player == null) p else throw RuntimeException("Found more than one player for username $username")
 			}
 		}
-		return player;
+		return player
 	}
 	
-	private Player checkCacheForId(String ttvUserId) {
-		Player player = null;
-		for(Player p : playerCache.values()) {
-			if(p.getTtvUser().getId().equals(ttvUserId)) {
-				if(player == null) player = p;
-				else throw new RuntimeException("Found more than one player for Twitch user ID " + ttvUserId);
+	private fun checkCacheForId(ttvUserId: String): Player? {
+		var player: Player? = null
+		for (p in playerCache.values) {
+			if (p!!.ttvUser!!.id == ttvUserId) {
+				player = if (player == null) p else throw RuntimeException("Found more than one player for Twitch user ID $ttvUserId")
 			}
 		}
-		return player;
+		return player
 	}
 	
-	@Override
-	public MongoDatabase db() {
-		return db;
-	}
+	override fun db(): MongoDatabase {
+		return db
+	} //endregion
 	
-	//endregion
+	init {
+		val conventions: MutableList<Convention> = ArrayList(Conventions.DEFAULT_CONVENTIONS)
+		conventions.add(Conventions.SET_PRIVATE_FIELDS_CONVENTION)
+		val pojoCodecProvider = PojoCodecProvider.builder()
+				.automatic(true)
+				.conventions(conventions)
+				.build()
+		val codecRegistry = CodecRegistries.fromRegistries(
+				MongoClient.getDefaultCodecRegistry(),  //				CodecRegistries.fromCodecs(new PlayerCodec()),
+				CodecRegistries.fromProviders(pojoCodecProvider)
+		)
+		playerCollection = createCollectionIfNotExists("playerdata", Document::class.java).withCodecRegistry(codecRegistry)
+		playerView = createPlayerViewIfNotExists().withCodecRegistry(codecRegistry)
+	}
 }

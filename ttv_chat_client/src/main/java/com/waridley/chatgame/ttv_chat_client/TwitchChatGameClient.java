@@ -19,8 +19,6 @@ import com.sun.net.httpserver.HttpServer;
 import com.waridley.chatgame.api.frontend.CommandMediator;
 import com.waridley.chatgame.api.frontend.GameClient;
 import com.waridley.credentials.NamedCredentialStorageBackend;
-import com.waridley.ttv.RefreshingProvider;
-import com.waridley.ttv.DeletableChannelMessageEvent;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -77,7 +75,7 @@ public class TwitchChatGameClient implements GameClient {
 		if(botCredOpt.isPresent()) {
 			log.info("Found bot credential.");
 			OAuth2Credential credential = (OAuth2Credential) botCredOpt.get();
-			Optional<OAuth2Credential> refreshedCredOpt = ((RefreshingProvider) identityProvider).refreshCredential(credential);
+			Optional<OAuth2Credential> refreshedCredOpt = identityProvider.refreshCredential(credential);
 			if(refreshedCredOpt.isPresent()) {
 				credential = refreshedCredOpt.get();
 				log.info("Successfully refreshed token");
@@ -195,7 +193,7 @@ public class TwitchChatGameClient implements GameClient {
 		twitchChat.getEventManager().onEvent(ChannelLeaveEvent.class).subscribe(this::userLeft);
 		
 		log.info("Joined channel: " + channelName);
-		twitchChat.sendMessage(channelName, "The game has started! TwitchRPG");
+		twitchChat.sendMessage(channelName, "/me The game has started! TwitchRPG");
 		
 	}
 	

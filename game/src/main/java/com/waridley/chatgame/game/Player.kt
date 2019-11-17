@@ -2,14 +2,11 @@
  * Copyright (c) 2019 Kevin Day
  * Licensed under the EUPL
  */
+package com.waridley.chatgame.game
 
-package com.waridley.chatgame.game;
-
-import com.waridley.chatgame.game.inventory.Backpack;
-import com.waridley.ttv.TtvUser;
-import org.bson.types.ObjectId;
-
-import java.util.Map;
+import com.waridley.chatgame.game.inventory.Backpack
+import com.waridley.ttv.TtvUser
+import org.bson.types.ObjectId
 
 /* TODO:
  *  Add currency field
@@ -18,42 +15,44 @@ import java.util.Map;
  *  Implement bank
  *  Implement items
  */
-
-public class Player implements Comparable {
+class Player @JvmOverloads constructor(id: ObjectId?, username: String? = null, ttvUser: TtvUser? = null) : Comparable<Any?> {
+	var id: ObjectId? = null
+		private set
 	
-	private ObjectId id;
-	public ObjectId getId() { return id; }
-	private void setId(ObjectId id) { this.id = id; }
+	private fun setId(id: ObjectId) {
+		this.id = id
+	}
 	
-	private String username;
-	public String getUsername() { return username; }
-	private void setUsername(String username) { this.username = username; }
-	public void changeUsername(String username, boolean really) {
-		if(really) {
-			setUsername(username);
+	var username: String? = null
+		private set
+	
+	private fun setUsername(username: String) {
+		this.username = username
+	}
+	
+	fun changeUsername(username: String, really: Boolean) {
+		if (really) {
+			setUsername(username)
 		}
 	}
 	
-	private TtvUser ttvUser;
-	public TtvUser getTtvUser() { return ttvUser; }
-	private void setTtvUser(TtvUser ttvUser) {
-		if(this.username == null || this.username.equalsIgnoreCase(ttvUser.getHelixUser().getDisplayName())) setUsername(ttvUser.getHelixUser().getDisplayName());
-		this.ttvUser = ttvUser;
-//		this.twitchUserId = ttvUser.getId();
-	}
-	public void changeTwitchAccount(TtvUser ttvUser, boolean changeUsername) {
-		changeUsername(ttvUser.getHelixUser().getDisplayName(), changeUsername);
-		setTtvUser(ttvUser);
+	var ttvUser: TtvUser? = null
+		private set
+	
+	private fun setTtvUser(ttvUser: TtvUser) {
+		if (username == null || username.equals(ttvUser.helixUser.displayName, ignoreCase = true)) setUsername(ttvUser.helixUser.displayName)
+		this.ttvUser = ttvUser
+		//		this.twitchUserId = ttvUser.getId();
 	}
 	
-	
-	private Backpack backpack = new Backpack();
-	
-	public Backpack getBackpack() {
-		return backpack;
+	fun changeTwitchAccount(ttvUser: TtvUser, changeUsername: Boolean) {
+		changeUsername(ttvUser.helixUser.displayName, changeUsername)
+		setTtvUser(ttvUser)
 	}
 	
-//	private Long twitchUserId = null;
+	val backpack = Backpack()
+	
+	//	private Long twitchUserId = null;
 //	public Long getTwitchUserId() { return twitchUserId; }
 //	private void setTwitchUserId(Long twitchUserId) {
 //		if(ttvUser == null) {
@@ -63,7 +62,6 @@ public class Player implements Comparable {
 //		}
 //		this.twitchUserId = twitchUserId;
 //	}
-	
 //	@Deprecated
 //	public Player(TwitchUser twitchUser) {
 //		setTwitchUserId(twitchUser.getUserId());
@@ -74,45 +72,24 @@ public class Player implements Comparable {
 //		setUsername(username);
 //		setTwitchUserId(twitchUserId);
 //	}
+//region Constructors
+//for pojo deserialization
+	protected constructor() : this(ObjectId()) {}
 	
-	//region Constructors
-	//for pojo deserialization
-	protected Player() {
-		this(new ObjectId());
-	}
+	constructor(ttvUser: TtvUser) : this(ObjectId(), ttvUser) {}
+	constructor(username: String?, ttvUser: TtvUser?) : this(ObjectId(), username, ttvUser) {}
+	constructor(id: ObjectId?, ttvUser: TtvUser) : this(id, ttvUser.helixUser.displayName, ttvUser) {}
 	
-	public Player(TtvUser ttvUser) {
-		this(new ObjectId(), ttvUser);
-	}
-	
-	public Player(String username, TtvUser ttvUser) {
-		this(new ObjectId(), username, ttvUser);
-	}
-	
-	public Player(ObjectId id) {
-		this(id, null, null);
-	}
-	
-	public Player(ObjectId id, String username) {
-		this(id, username, null);
-	}
-	
-	public Player(ObjectId id, TtvUser ttvUser) {
-		this(id, ttvUser.getHelixUser().getDisplayName(), ttvUser);
-	}
-	
-	public Player(ObjectId id, String username, TtvUser ttvUser) {
-		this.id = id;
-		this.username = username;
-		this.ttvUser = ttvUser;
-	}
 	//endregion
+	private val unknownProperties: Map<String, Any>? = null
 	
-	private Map<String, Object> unknownProperties;
-	
-	@Override
-	public int compareTo(Object o) {
-		return ((Player) o).getId().compareTo(id);
+	override fun compareTo(o: Any?): Int {
+		return (o as Player?)!!.id!!.compareTo(id)
 	}
 	
+	init {
+		this.id = id
+		this.username = username
+		this.ttvUser = ttvUser
+	}
 }

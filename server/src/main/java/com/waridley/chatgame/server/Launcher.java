@@ -12,6 +12,7 @@ import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
+import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
@@ -22,7 +23,6 @@ import com.waridley.chatgame.api.frontend.GameClient;
 import com.waridley.chatgame.mongo.MongoGameBackend;
 import com.waridley.chatgame.ttv_chat_client.TwitchChatGameClient;
 import com.waridley.credentials.DesktopAuthController;
-import com.waridley.ttv.RefreshingProvider;
 import com.waridley.credentials.mongo.MongoCredentialStorageBackend;
 import com.waridley.ttv.TtvStorageInterface;
 import com.waridley.ttv.mongo.MongoTtvBackend;
@@ -35,7 +35,7 @@ import java.util.Properties;
 public class Launcher {
 	
 	private static String channelName;
-	private static RefreshingProvider idProvider;
+	private static OAuth2IdentityProvider idProvider;
 	private static MongoDatabase db;
 	private static OAuth2Credential twitchCredential;
 	private static IStorageBackend credBackend;
@@ -93,7 +93,7 @@ public class Launcher {
 	private static void init(String[] args) throws URISyntaxException {
 		channelName = args[0];
 		serverOptions.getEmbeddedChatClientOptions().setChannelName(channelName);
-		idProvider = new RefreshingProvider(args[2], args[3], "http://localhost:6464");
+		idProvider = new TwitchIdentityProvider(args[2], args[3], "http://localhost:6464");
 		serverOptions.getEmbeddedChatClientOptions().setIdentityProvider(idProvider);
 		db = connectToDatabase(args[4]);
 		twitchCredential = new OAuth2Credential("twitch", args[5]);

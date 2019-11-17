@@ -1,41 +1,35 @@
-package com.waridley.credentials;
+package com.waridley.credentials
 
-import com.github.philippheuer.credentialmanager.CredentialManager;
-import com.github.philippheuer.credentialmanager.api.IStorageBackend;
-import com.github.philippheuer.credentialmanager.domain.Credential;
+import com.github.philippheuer.credentialmanager.api.IStorageBackend
+import com.github.philippheuer.credentialmanager.domain.Credential
+import java.util.*
 
-import java.util.*;
-
-public class NamedCredentialStorageBackend implements IStorageBackend {
-	
-	protected Map<String, Credential> credentialMap;
-	
-	public NamedCredentialStorageBackend() {
-		credentialMap = new HashMap<>();
+open class NamedCredentialStorageBackend : IStorageBackend {
+	@JvmField
+	protected var credentialMap: MutableMap<String, Credential>
+	fun saveCredential(name: String, credential: Credential) {
+		credentialMap[name] = credential
 	}
 	
-	public void saveCredential(String name, Credential credential) {
-		credentialMap.put(name, credential);
+	fun getCredentialByName(name: String?): Optional<Credential> {
+		return Optional.ofNullable(credentialMap[name])
 	}
 	
-	public Optional<Credential> getCredentialByName(String name) {
-		return Optional.ofNullable(credentialMap.get(name));
+	override fun loadCredentials(): List<Credential> {
+		return ArrayList(credentialMap.values)
 	}
 	
-	@Override
-	public List<Credential> loadCredentials() {
-		return new ArrayList<>(credentialMap.values());
-	}
-	
-	@Override
-	public void saveCredentials(List<Credential> credentials) {
-		for(Credential credential : credentials) {
-			credentialMap.put(credential.getUserId(), credential);
+	override fun saveCredentials(credentials: List<Credential>) {
+		for (credential in credentials) {
+			credentialMap[credential.userId] = credential
 		}
 	}
 	
-	@Override
-	public Optional<Credential> getCredentialByUserId(String userId) {
-		return Optional.ofNullable(credentialMap.get(userId));
+	override fun getCredentialByUserId(userId: String): Optional<Credential> {
+		return Optional.ofNullable(credentialMap[userId])
+	}
+	
+	init {
+		credentialMap = HashMap()
 	}
 }

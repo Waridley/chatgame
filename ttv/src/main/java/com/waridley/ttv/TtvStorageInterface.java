@@ -9,10 +9,7 @@ import com.github.twitch4j.helix.TwitchHelix;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public interface TtvStorageInterface {
 	
@@ -20,7 +17,7 @@ public interface TtvStorageInterface {
 	String helixAccessToken();
 	
 	default TtvUser findOrCreateTtvUserFromId(String ttvUserId) {
-		return findOrCreateTtvUser(getUsersFromIds(Collections.singletonList(ttvUserId)).get(0));
+		return findOrCreateTtvUser(getHelixUsersFromIds(Collections.singletonList(ttvUserId)).get(0));
 	}
 	default TtvUser findOrCreateTtvUserFromLogin(String ttvLogin) {
 		return findOrCreateTtvUser(getHelixUsersFromLogins(Collections.singletonList(ttvLogin)).get(0));
@@ -28,18 +25,18 @@ public interface TtvStorageInterface {
 	TtvUser findOrCreateTtvUser(User user);
 	
 	default Optional<TtvUser> findTtvUserById(String ttvUserId) {
-		return findTtvUser(getUsersFromIds(Collections.singletonList(ttvUserId)).get(0));
+		return findTtvUserByLogin(getHelixUsersFromIds(Collections.singletonList(ttvUserId)).get(0));
 	}
-	default Optional<TtvUser> findTtvUser(String ttvLogin) {
-		return findTtvUser(getHelixUsersFromLogins(Collections.singletonList(ttvLogin)).get(0));
+	default Optional<TtvUser> findTtvUserByLogin(String ttvLogin) {
+		return findTtvUserByLogin(getHelixUsersFromLogins(Collections.singletonList(ttvLogin)).get(0));
 	}
-	Optional<TtvUser> findTtvUser(User user);
+	Optional<TtvUser> findTtvUserByLogin(User user);
 	
 	List<TtvUser> findTtvUsers(List<User> helixUsers);
 	List<TtvUser> findTtvUsersByIds(List<String> userIds);
 	
 	
-	default List<User> getUsersFromIds(List<String> ids) {
+	default List<User> getHelixUsersFromIds(List<String> ids) {
 		List<User> result = new ArrayList<>(ids.size());
 		int divSize = 100;
 		List<List<String>> idLists = new ArrayList<>((ids.size() / divSize) + 1);
@@ -60,12 +57,12 @@ public interface TtvStorageInterface {
 	}
 	
 	default List<User> getHelixUsersFromLogins(List<String> logins) {
-		List<User> result = new ArrayList<>(logins.size());
+		List<User> result = new Vector<>(logins.size());
 		int divSize = 100;
-		List<List<String>> loginLists = new ArrayList<>((logins.size() / divSize) + 1);
+		List<List<String>> loginLists = new Vector<>((logins.size() / divSize) + 1);
 		for(int i = 0; i < logins.size(); i += divSize) {
 			int to = i + divSize;
-			if(to >= logins.size()) to = logins.size();
+			if(to > logins.size()) to = logins.size();
 			loginLists.add(logins.subList(i, to));
 		}
 		for(List<String> l : loginLists) {

@@ -1,8 +1,8 @@
-package com.waridley.chatgame.game.currency;
+package com.waridley.chatgame.game.currency
 
-import lombok.Data;
+import lombok.Data
 
 @Data
-public class Coins {
-	private long amount = 0L;
+class Coins {
+	private val amount = 0L
 }

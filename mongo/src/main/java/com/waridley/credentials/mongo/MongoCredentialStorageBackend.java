@@ -17,10 +17,10 @@ import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 
 public class MongoCredentialStorageBackend extends NamedCredentialStorageBackend implements MongoBackend {
-	
+
 	private MongoCollection<Document> credCollection;
 	private MongoDatabase db;
-	
+
 	public MongoCredentialStorageBackend(MongoDatabase db, String collectionName) {
 		this.db = db;
 		/*List<Convention> conventions = new ArrayList<>(Conventions.DEFAULT_CONVENTIONS);
@@ -35,12 +35,12 @@ public class MongoCredentialStorageBackend extends NamedCredentialStorageBackend
 				//CodecRegistries.fromCodecs(new OAuth2Codec()),
 				CodecRegistries.fromProviders(new CredentialCodecProvider())
 		);
-		
+
 		this.credCollection = createCollectionIfNotExists(collectionName, Document.class).withCodecRegistry(codecRegistry);
-	
+
 		this.credentialMap = new MongoMap<>(credCollection, Credential.class);
 	}
-	
+
 //	@Override
 //	public List<Credential> loadCredentials() {
 //		ArrayList<Credential> credentials = new ArrayList<>();
@@ -49,7 +49,7 @@ public class MongoCredentialStorageBackend extends NamedCredentialStorageBackend
 //		}
 //		return credentials;
 //	}
-	
+
 	@Override
 	public MongoDatabase db() {
 		return db;
@@ -81,7 +81,7 @@ public class MongoCredentialStorageBackend extends NamedCredentialStorageBackend
 //					)
 //			);*/
 //		}
-		
+
 		/*for(Credential credential : credentials) {
 			if (credential instanceof OAuth2Credential) {
 				CredentialWrapper credentialWrapper;
@@ -110,7 +110,7 @@ public class MongoCredentialStorageBackend extends NamedCredentialStorageBackend
 			}
 		}*/
 //	}
-	
+
 //	@Override
 //	public Optional<Credential> getCredentialByUserId(String userId) {
 //		return Optional.ofNullable(credCollection.find(Filters.eq("userId", userId)).first());
@@ -120,18 +120,18 @@ public class MongoCredentialStorageBackend extends NamedCredentialStorageBackend
 //	public MongoDatabase db() {
 //		return db;
 //	}
-	
+
 	/*public static class CredentialWrapper {
-		
+
 		private CredentialWrapper(OAuth2Credential credential) {
 			this.setCredential(credential);
 			this.setUserId(credential.getUserId());
 		}
-		
+
 		private String userId;
 		public String getUserId() { return userId; }
 		private void setUserId(String userId) { this.userId = userId; }
-		
+
 		private OAuth2Credential credential;
 		public OAuth2Credential getCredential() { return credential; }
 		private void setCredential(OAuth2Credential credential) { this.credential = credential; }
