@@ -42,7 +42,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 	}
 	
 	//region findOrCreatePlayer()
-	override fun findOrCreatePlayer(ttvUser: TtvUser?): Player? {
+	override fun findOrCreatePlayer(ttvUser: TtvUser): Player? {
 		var player = checkCacheFor(ttvUser)
 		if (player == null) {
 			val playerDoc = playerCollection.findOneAndUpdate(
@@ -62,7 +62,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		return player
 	}
 	
-	override fun findOrCreatePlayerByTtvId(ttvUserId: String?): Player? {
+	override fun findOrCreatePlayerByTtvId(ttvUserId: String): Player? {
 		var player = checkCacheForUsername(ttvUserId)
 		if (player == null) {
 			var ttvUser: TtvUser? = null
@@ -92,7 +92,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		return player
 	}
 	
-	override fun findOrCreatePlayer(gameUsername: String?): Player? {
+	override fun findOrCreatePlayer(gameUsername: String): Player? {
 		println("Looking for player $gameUsername")
 		var player = checkCacheForUsername(gameUsername)
 		if (player == null) {
@@ -125,7 +125,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 	
 	//endregion
 //region findPlayer()
-	override fun findPlayer(ttvUser: TtvUser?): Player? {
+	override fun findPlayer(ttvUser: TtvUser): Player? {
 		var player = checkCacheFor(ttvUser)
 		if (player == null) {
 			player = playerView.find(Filters.eq("ttvUser._id", ttvUser!!.id)).first()
@@ -134,7 +134,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		return player
 	}
 	
-	override fun findPlayer(gameUsername: String?): Player? {
+	override fun findPlayer(gameUsername: String): Player? {
 		var player = checkCacheForUsername(gameUsername)
 		if (player == null) {
 			player = playerView.find(Filters.eq("username", gameUsername)).first()
@@ -143,7 +143,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		return player
 	}
 	
-	override fun findPlayer(id: ObjectId?): Player? {
+	override fun findPlayer(id: ObjectId): Player? {
 		var player = playerCache[id]
 		if (player == null) {
 			player = playerView.find(Filters.eq("_id", id)).first()
@@ -153,7 +153,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 	}
 	
 	//endregion
-	override fun logMinutes(player: Player?, minutes: Long, online: Boolean): Player? { //TODO implement player watchtime logging
+	override fun logMinutes(player: Player, minutes: Long, online: Boolean): Player? { //TODO implement player watchtime logging
 		return null
 	}
 	
@@ -163,7 +163,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 	 * @param player The player to save
 	 * @return The saved player
 	 */
-	override fun savePlayer(player: Player?): Player? {
+	override fun savePlayer(player: Player): Player? {
 		val result = playerView.findOneAndReplace(
 				Filters.eq("_id", player!!.id),
 				player,
@@ -174,7 +174,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 	}
 	
 	//region checkCacheFor()
-	private fun checkCacheFor(ttvUser: TtvUser?): Player? {
+	private fun checkCacheFor(ttvUser: TtvUser): Player? {
 		var player: Player? = null
 		for (p in playerCache.values) {
 			if (p.ttvUser == ttvUser) {
@@ -184,7 +184,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		return player
 	}
 	
-	private fun checkCacheForUsername(username: String?): Player? {
+	private fun checkCacheForUsername(username: String): Player? {
 		var player: Player? = null
 		for (p in playerCache.values) {
 			if (p.username == username) {

@@ -3,11 +3,12 @@ package com.waridley.chatgame.game
 import lombok.Data
 import org.bson.codecs.pojo.annotations.BsonIgnore
 
-@Data
 open class GameObject {
+	
 	@BsonIgnore
 	protected var parent: GameObject? = null
-	protected var children: List<GameObject> = emptyList()
+	protected val children: MutableList<GameObject> = ArrayList()
+	
 	@BsonIgnore
 	@Throws(Exception::class)
 	private fun addChild(child: GameObject) {

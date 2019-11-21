@@ -56,17 +56,17 @@ class ServerOptions {
 	}
 	
 	class EmbeddedChatClientOptions {
-		@JvmField var isEnabled = false
-		@JvmField var channelName: String? = null
-		@JvmField var identityProvider: OAuth2IdentityProvider? = null
+		var isEnabled = false
+		lateinit var channelName: String
+		lateinit var identityProvider: OAuth2IdentityProvider
 		
-		constructor(enabled: Boolean, channelName: String?, identityProvider: OAuth2IdentityProvider?) {
+		constructor(enabled: Boolean, channelName: String, identityProvider: OAuth2IdentityProvider) {
 			isEnabled = enabled
 			this.channelName = channelName
 			this.identityProvider = identityProvider
 		}
 		
-		constructor() {}
+		constructor()
 		
 		fun withEnabled(enabled: Boolean): EmbeddedChatClientOptions {
 			return if (isEnabled == enabled) this else EmbeddedChatClientOptions(enabled, channelName, identityProvider)

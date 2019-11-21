@@ -15,11 +15,11 @@ class CommandExecutive internal constructor(private val ttvStorageInterface: Ttv
 			return ttvStorageInterface.findOrCreateTtvUserFromLogin(login)
 		}
 		
-		fun playerFromTtvUser(ttvUser: TtvUser?): Player? {
+		fun playerFromTtvUser(ttvUser: TtvUser): Player? {
 			return gameStorageInterface.findOrCreatePlayer(ttvUser)
 		}
 		
-		fun playerFromTtvUserId(userId: String?): Player? {
+		fun playerFromTtvUserId(userId: String): Player? {
 			return gameStorageInterface.findOrCreatePlayerByTtvId(userId)
 		}
 		
