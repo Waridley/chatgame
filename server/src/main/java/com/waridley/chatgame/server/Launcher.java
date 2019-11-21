@@ -65,7 +65,7 @@ public class Launcher {
 		//startWatchtimeLogger(6L);
 		GameServer server = new GameServer(ttvBackend, gameBackend, serverOptions);
 		server.start();
-		loadClients(idProvider, channelName, server.getCommandExecutive());
+		loadClients(idProvider, channelName, server.commandExecutive);
 		
 	}
 	
@@ -92,9 +92,9 @@ public class Launcher {
 	
 	private static void init(String[] args) throws URISyntaxException {
 		channelName = args[0];
-		serverOptions.getEmbeddedChatClientOptions().setChannelName(channelName);
+		serverOptions.embeddedChatClientOptions.channelName = channelName;
 		idProvider = new TwitchIdentityProvider(args[2], args[3], "http://localhost:6464");
-		serverOptions.getEmbeddedChatClientOptions().setIdentityProvider(idProvider);
+		serverOptions.embeddedChatClientOptions.identityProvider = idProvider;
 		db = connectToDatabase(args[4]);
 		twitchCredential = new OAuth2Credential("twitch", args[5]);
 		

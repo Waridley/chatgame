@@ -1,44 +1,31 @@
-package com.waridley.chatgame.server;
+package com.waridley.chatgame.server
 
-import com.waridley.chatgame.api.backend.GameStorageInterface;
-import com.waridley.chatgame.game.Game;
-import com.waridley.chatgame.ttv_chat_client.TwitchChatGameClient;
-import com.waridley.ttv.TtvStorageInterface;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import com.waridley.chatgame.api.backend.GameStorageInterface
+import com.waridley.chatgame.game.Game
+import com.waridley.chatgame.ttv_chat_client.TwitchChatGameClient
+import com.waridley.ttv.TtvStorageInterface
+import org.slf4j.LoggerFactory
 
-@Slf4j
-public class GameServer {
-	
-	private Game game;
-	private GameStorageInterface gameBackend;
-	private TtvStorageInterface ttvBackend;
-	private ServerOptions options;
-	private TwitchChatGameClient ttvChatClient = null;
-	private SocketCommandListener socketCommandListener = null;
-	
-	@Getter
-	private CommandExecutive commandExecutive;
-	
-	public GameServer(TtvStorageInterface ttvStorageInterface, GameStorageInterface gameStorageInterface, ServerOptions options) {
-		this.gameBackend = gameStorageInterface;
-		this.ttvBackend = ttvStorageInterface;
-		this.options = options;
-		commandExecutive = new CommandExecutive(ttvBackend, gameBackend);
+class GameServer(private val ttvBackend: TtvStorageInterface, private val gameBackend: GameStorageInterface, private val options: ServerOptions) {
+	private var game: Game? = null
+	private var ttvChatClient: TwitchChatGameClient? = null
+	private var socketCommandListener: SocketCommandListener? = null
+	@JvmField val commandExecutive: CommandExecutive = CommandExecutive(ttvBackend, gameBackend)
+	fun start() {
+		game = Game()
+		val eccOpts = options.embeddedChatClientOptions
+		if (eccOpts.isEnabled) {
+			ttvChatClient = TwitchChatGameClient(eccOpts.identityProvider, eccOpts.channelName, EmbeddedCommandMediator(commandExecutive))
+		}
+		val sclOpts = options.socketCommandListenerOptions
+		if (sclOpts.isEnabled) {
+			socketCommandListener = SocketCommandListener(EmbeddedCommandMediator(commandExecutive), sclOpts)
+		}
+		log.info("Started game server with options: $options")
 	}
 	
-	
-	public void start() {
-		game = new Game();
-		ServerOptions.EmbeddedChatClientOptions eccOpts = options.getEmbeddedChatClientOptions();
-		if(eccOpts.isEnabled()) {
-			ttvChatClient = new TwitchChatGameClient(eccOpts.getIdentityProvider(), eccOpts.getChannelName(), new EmbeddedCommandMediator(commandExecutive));
-		}
-		ServerOptions.SocketCommandListenerOptions sclOpts = options.getSocketCommandListenerOptions();
-		if(sclOpts.isEnabled()) {
-			socketCommandListener = new SocketCommandListener(new EmbeddedCommandMediator(commandExecutive), sclOpts);
-		}
-		log.info("Started game server with options: " + options.toString());
+	companion object {
+		private val log = LoggerFactory.getLogger(GameServer::class.java)
 	}
 	
 }

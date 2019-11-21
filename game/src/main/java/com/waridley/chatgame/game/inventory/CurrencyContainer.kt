@@ -10,6 +10,6 @@ import lombok.Data
 
 @Data
 class CurrencyContainer {
-	private val coins = Coins()
+	val coins = Coins()
 	private val gems = Gems()
 }

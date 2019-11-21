@@ -1,54 +1,34 @@
-package com.waridley.chatgame.server;
+package com.waridley.chatgame.server
 
-import com.waridley.chatgame.api.backend.GameStorageInterface;
-import com.waridley.chatgame.game.Player;
-import com.waridley.ttv.TtvStorageInterface;
-import com.waridley.ttv.TtvUser;
-import lombok.AllArgsConstructor;
+import com.waridley.chatgame.api.backend.GameStorageInterface
+import com.waridley.chatgame.game.Player
+import com.waridley.ttv.TtvStorageInterface
+import com.waridley.ttv.TtvUser
 
-public class CommandExecutive {
+class CommandExecutive internal constructor(private val ttvStorageInterface: TtvStorageInterface, private val gameStorageInterface: GameStorageInterface) {
+	@JvmField
+	val info: InfoRelayer
+	val check: PermissionChecker
 	
-	private final TtvStorageInterface ttvStorageInterface;
-	private final GameStorageInterface gameStorageInterface;
-	
-	final InfoRelayer info;
-	final PermissionChecker check;
-	
-	CommandExecutive(TtvStorageInterface ttvStorageInterface, GameStorageInterface gameStorageInterface) {
-		this.ttvStorageInterface = ttvStorageInterface;
-		this.gameStorageInterface = gameStorageInterface;
-		this.info = new InfoRelayer(ttvStorageInterface, gameStorageInterface);
-		this.check = new PermissionChecker(ttvStorageInterface, gameStorageInterface);
-	}
-	
-	
-	@AllArgsConstructor
-	static class InfoRelayer {
-		
-		private TtvStorageInterface ttvStorageInterface;
-		private GameStorageInterface gameStorageInterface;
-		
-		TtvUser ttvUserFromLogin(String login) {
-			return ttvStorageInterface.findOrCreateTtvUserFromLogin(login);
+	class InfoRelayer(private val ttvStorageInterface: TtvStorageInterface, private val gameStorageInterface: GameStorageInterface) {
+		fun ttvUserFromLogin(login: String?): TtvUser {
+			return ttvStorageInterface.findOrCreateTtvUserFromLogin(login)
 		}
 		
-		Player playerFromTtvUser(TtvUser ttvUser) {
-			return gameStorageInterface.findOrCreatePlayer(ttvUser);
+		fun playerFromTtvUser(ttvUser: TtvUser?): Player? {
+			return gameStorageInterface.findOrCreatePlayer(ttvUser)
 		}
 		
-		Player playerFromTtvUserId(String userId) {
-			return gameStorageInterface.findOrCreatePlayerByTtvId(userId);
+		fun playerFromTtvUserId(userId: String?): Player? {
+			return gameStorageInterface.findOrCreatePlayerByTtvId(userId)
 		}
-	}
-	
-	@AllArgsConstructor
-	static class PermissionChecker {
-		
-		private TtvStorageInterface ttvStorageInterface;
-		private GameStorageInterface gameStorageInterface;
-		
-		
 		
 	}
 	
+	class PermissionChecker(private val ttvStorageInterface: TtvStorageInterface, private val gameStorageInterface: GameStorageInterface)
+	
+	init {
+		info = InfoRelayer(ttvStorageInterface, gameStorageInterface)
+		check = PermissionChecker(ttvStorageInterface, gameStorageInterface)
+	}
 }

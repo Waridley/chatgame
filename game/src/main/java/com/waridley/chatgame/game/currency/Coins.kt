@@ -4,5 +4,5 @@ import lombok.Data
 
 @Data
 class Coins {
-	private val amount = 0L
+	val amount = 0L
 }

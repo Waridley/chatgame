@@ -1,27 +1,18 @@
-package com.waridley.chatgame.server;
+package com.waridley.chatgame.server
 
-import com.waridley.chatgame.api.backend.GameStorageInterface;
-import com.waridley.chatgame.api.frontend.CommandMediator;
-import com.waridley.chatgame.game.Player;
-import com.waridley.ttv.TtvStorageInterface;
-import com.waridley.ttv.TtvUser;
-import lombok.AllArgsConstructor;
+import com.waridley.chatgame.api.frontend.CommandMediator
+import com.waridley.chatgame.game.Player
 
-@AllArgsConstructor
-public class EmbeddedCommandMediator implements CommandMediator {
-	
-	private CommandExecutive exec;
-	
-	@Override
-	public Player getPlayerByTtvLogin(String login) {
-		System.out.println("Getting TtvUser for login \"" + login + "\"");
-		TtvUser ttvUser = exec.info.ttvUserFromLogin(login);
-		System.out.println("Getting player for TtvUser \"" + ttvUser.getHelixUser().getDisplayName() + "\"");
-		return exec.info.playerFromTtvUser(ttvUser);
+class EmbeddedCommandMediator(private val exec: CommandExecutive) : CommandMediator {
+	override fun getPlayerByTtvLogin(login: String?): Player? {
+		println("Getting TtvUser for login \"$login\"")
+		val ttvUser = exec.info.ttvUserFromLogin(login)
+		println("Getting player for TtvUser \"" + ttvUser.helixUser.displayName + "\"")
+		return exec.info.playerFromTtvUser(ttvUser)
 	}
 	
-	@Override
-	public Player getPlayerByTtvUserId(String userId) {
-		return exec.info.playerFromTtvUserId(userId);
+	override fun getPlayerByTtvUserId(userId: String?): Player? {
+		return exec.info.playerFromTtvUserId(userId)
 	}
+	
 }

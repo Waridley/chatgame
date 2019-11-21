@@ -1,15 +1,11 @@
-package com.waridley.chatgame.server;
+package com.waridley.chatgame.server
 
-import com.waridley.chatgame.api.frontend.CommandMediator;
-import lombok.AllArgsConstructor;
+import com.waridley.chatgame.api.frontend.CommandMediator
+import com.waridley.chatgame.server.ServerOptions.SocketCommandListenerOptions
+import lombok.AllArgsConstructor
 
 @AllArgsConstructor
-public class SocketCommandListener {
-	
-	private CommandMediator commandMediator;
-	
-	private ServerOptions.SocketCommandListenerOptions options;
-	
-	
-	//TODO: Implement socket server
-}
+class SocketCommandListener (
+	private val commandMediator: CommandMediator? = null,
+	private val options: SocketCommandListenerOptions? = null
+)

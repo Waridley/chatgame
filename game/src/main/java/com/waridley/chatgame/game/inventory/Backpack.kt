@@ -9,5 +9,5 @@ import lombok.Data
 @Data
 class Backpack {
 	private val mainPouch = ItemContainer()
-	private val currencyPouch = CurrencyContainer()
+	val currencyPouch = CurrencyContainer()
 }

@@ -22,7 +22,7 @@ import java.util.*
 class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchHelix, private val helixCredential: OAuth2Credential) : GameStorageInterface, MongoBackend {
 	private val playerCollection: MongoCollection<Document>
 	private val playerView: MongoCollection<Player?>
-	private val playerCache: MutableMap<ObjectId?, Player?> = Collections.synchronizedSortedMap(TreeMap<ObjectId, Player>())
+	private val playerCache: MutableMap<ObjectId?, Player> = Collections.synchronizedSortedMap(TreeMap<ObjectId, Player>())
 	private fun createPlayerViewIfNotExists(): MongoCollection<Player?> {
 		var viewExists = false
 		for (name in db.listCollectionNames()) {
@@ -34,7 +34,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		if (!viewExists) db.createView(
 				"player_view",
 				"playerdata",
-				ArrayList(Arrays.asList(Aggregates.lookup("ttv_users", "ttvUserId", "_id", "ttvUser"),
+				ArrayList(listOf(Aggregates.lookup("ttv_users", "ttvUserId", "_id", "ttvUser"),
 						Aggregates.unwind("\$ttvUser"),
 						Aggregates.project(Document("ttvUserId", 0))))
 		)
@@ -92,24 +92,24 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		return player
 	}
 	
-	override fun findOrCreatePlayer(username: String?): Player? {
-		println("Looking for player $username")
-		var player = checkCacheForUsername(username)
+	override fun findOrCreatePlayer(gameUsername: String?): Player? {
+		println("Looking for player $gameUsername")
+		var player = checkCacheForUsername(gameUsername)
 		if (player == null) {
-			player = playerView.find(Filters.eq("username", username)).first()
+			player = playerView.find(Filters.eq("username", gameUsername)).first()
 			if (player == null) {
 				var ttvUser: TtvUser? = null
 				val userList = helix.getUsers(
 						helixCredential.accessToken,
-						null, listOf(username)).execute()
+						null, listOf(gameUsername)).execute()
 				for (user in userList.users) {
 					ttvUser = TtvUser(user)
 				}
 				val playerDoc = playerCollection.findOneAndUpdate(
-						Filters.eq("username", username),
+						Filters.eq("username", gameUsername),
 						Updates.setOnInsert(
 								Document("ttvUserId", ttvUser?.id)
-										.append("username", username)
+										.append("username", gameUsername)
 										.append("backpack", Backpack())
 						),
 						FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
@@ -134,10 +134,10 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		return player
 	}
 	
-	override fun findPlayer(username: String?): Player? {
-		var player = checkCacheForUsername(username)
+	override fun findPlayer(gameUsername: String?): Player? {
+		var player = checkCacheForUsername(gameUsername)
 		if (player == null) {
-			player = playerView.find(Filters.eq("username", username)).first()
+			player = playerView.find(Filters.eq("username", gameUsername)).first()
 			if (player != null) playerCache[player.id] = player
 		}
 		return player
@@ -177,7 +177,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 	private fun checkCacheFor(ttvUser: TtvUser?): Player? {
 		var player: Player? = null
 		for (p in playerCache.values) {
-			if (p!!.ttvUser == ttvUser) {
+			if (p.ttvUser == ttvUser) {
 				player = if (player == null) p else throw RuntimeException("Found more than one player for Twitch user ID " + ttvUser!!.id)
 			}
 		}
@@ -187,7 +187,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 	private fun checkCacheForUsername(username: String?): Player? {
 		var player: Player? = null
 		for (p in playerCache.values) {
-			if (p!!.username == username) {
+			if (p.username == username) {
 				player = if (player == null) p else throw RuntimeException("Found more than one player for username $username")
 			}
 		}
@@ -197,7 +197,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 	private fun checkCacheForId(ttvUserId: String): Player? {
 		var player: Player? = null
 		for (p in playerCache.values) {
-			if (p!!.ttvUser!!.id == ttvUserId) {
+			if (p.ttvUser?.id == ttvUserId) {
 				player = if (player == null) p else throw RuntimeException("Found more than one player for Twitch user ID $ttvUserId")
 			}
 		}
