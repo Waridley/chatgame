@@ -34,7 +34,10 @@ dependencies {
 
     compile("de.undercouch:bson4jackson:2.9.2")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
+	
+	//CLI parser
+	implementation("com.github.ajalt:clikt:2.3.0")
+	
     compile(project(":game"))
     compile(project(":api:backend"))
     compile(project(":api:frontend"))

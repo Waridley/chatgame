@@ -42,16 +42,19 @@ dependencies {
 
     //BSON jackson plugin
     compile("de.undercouch:bson4jackson:2.9.2")
-
-    compile project("api")
-    compile project("ttv_chat_client")
-    compile project("ttv")
-    compile project("credentials")
-    compile project("mongo")
-    compile project("api:backend")
-    compile project("api:frontend")
+    
+    //CLI parser
+    implementation("com.github.ajalt:clikt:2.3.0")
+    
+//    compile project("api")
+//    compile project("ttv_chat_client")
+//    compile project("ttv")
+//    compile project("credentials")
+//    compile project("mongo")
+//    compile project("api:backend")
+//    compile project("api:frontend")
     compile project("server")
-    compile project("game")
+//    compile project("game")
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 compileKotlin {

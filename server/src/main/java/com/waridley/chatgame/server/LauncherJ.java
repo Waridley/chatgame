@@ -90,7 +90,7 @@ public class LauncherJ {
 		return mongoClient.getDatabase("chatgame");
 	}
 	
-	private static void init(String[] args) throws URISyntaxException {
+	private static void init(String... args) throws URISyntaxException {
 		channelName = args[0];
 		serverOptions.embeddedChatClientOptions.channelName = channelName;
 		idProvider = new TwitchIdentityProvider(args[2], args[3], "http://localhost:6464");

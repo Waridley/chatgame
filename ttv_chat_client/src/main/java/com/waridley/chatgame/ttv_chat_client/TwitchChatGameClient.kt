@@ -8,7 +8,6 @@ import com.github.philippheuer.credentialmanager.CredentialManager
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.philippheuer.credentialmanager.identityprovider.OAuth2IdentityProvider
 import com.github.twitch4j.auth.domain.TwitchScopes
-import com.github.twitch4j.chat.TwitchChat
 import com.github.twitch4j.chat.TwitchChatBuilder
 import com.github.twitch4j.chat.events.channel.ChannelJoinEvent
 import com.github.twitch4j.chat.events.channel.ChannelLeaveEvent
@@ -16,7 +15,9 @@ import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import com.waridley.chatgame.api.frontend.CommandMediator
 import com.waridley.chatgame.api.frontend.GameClient
+import com.waridley.chatgame.game.GameClientOptions
 import com.waridley.credentials.NamedCredentialStorageBackend
+import com.waridley.ttv.TtvClientOptions
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -32,6 +33,14 @@ class TwitchChatGameClient(
 	private val credentialStorage: NamedCredentialStorageBackend = provider.credentialManager.storageBackend as NamedCredentialStorageBackend
 	private val credentialManager: CredentialManager = provider.credentialManager
 	private val identityProvider: OAuth2IdentityProvider = provider
+	
+	constructor(ttvOpts: TtvChatGameClientOptions) :
+			this(
+				ttvOpts.ttvClientOptions.idProvider,
+				ttvOpts.channelName,
+				ttvOpts.commandMediator
+			)
+	
 	override fun start() {
 		log.info("Starting Twitch Chat Game Client")
 		waitForCredential()
