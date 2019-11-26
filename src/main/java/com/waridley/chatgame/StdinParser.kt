@@ -10,11 +10,7 @@ import com.waridley.ttv.TtvClientOptions
 import com.waridley.ttv.TtvStorageInterface
 import kotlin.system.exitProcess
 
-class CliParser(ttvBackend: TtvStorageInterface, gameBackend: GameStorageInterface) {
-	
-	val ttvOpts = TtvClientOptions()
-	
-	private val srvCommand = Server(ttvBackend, gameBackend).subcommands(TtvChatGameClientOptions(ttvOpts), Exit())
+class StdinParser {
 	
 	fun start() {
 		println("Started CliParser")
@@ -23,7 +19,7 @@ class CliParser(ttvBackend: TtvStorageInterface, gameBackend: GameStorageInterfa
 			println("Enter a command:")
 			console.promptForLine("", false)?.let {
 				try {
-					srvCommand.parse(it.split(" "))
+					launchCmd.parse(it.split(" "))
 				} catch (e: PrintHelpMessage) {
 					echo(e.command.getFormattedHelp())
 				} catch (e: PrintCompletionMessage) {

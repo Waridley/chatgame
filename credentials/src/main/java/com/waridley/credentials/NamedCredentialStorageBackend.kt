@@ -6,7 +6,8 @@ import java.util.*
 
 open class NamedCredentialStorageBackend : IStorageBackend {
 	@JvmField
-	protected var credentialMap: MutableMap<String, Credential>
+	protected var credentialMap: MutableMap<String, Credential> = HashMap()
+	
 	fun saveCredential(name: String, credential: Credential) {
 		credentialMap[name] = credential
 	}
@@ -29,7 +30,4 @@ open class NamedCredentialStorageBackend : IStorageBackend {
 		return Optional.ofNullable(credentialMap[userId])
 	}
 	
-	init {
-		credentialMap = HashMap()
-	}
 }

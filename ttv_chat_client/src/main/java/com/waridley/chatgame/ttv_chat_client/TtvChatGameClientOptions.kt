@@ -8,6 +8,8 @@ import com.waridley.ttv.TtvClientOptions
 class TtvChatGameClientOptions(
 		val ttvClientOptions: TtvClientOptions): CliktCommand(name = "ttv-chat-client") {
 	
+	val channelName by requireObject<String>()
+	
 	val commandMediator by requireObject<CommandMediator>()
 	
 	override fun run() {

@@ -25,17 +25,9 @@ import org.bson.codecs.pojo.Conventions
 import org.bson.codecs.pojo.PojoCodecProvider
 import java.util.*
 
-class MongoTtvBackend : TtvStorageInterface, MongoBackend {
-	private val db: MongoDatabase
-	override fun db(): MongoDatabase {
-		return db
-	}
+class MongoTtvBackend(override val db: MongoDatabase, override val helix: TwitchHelix) : TtvStorageInterface, MongoBackend {
 	
-	private val ttvUserCollection: MongoCollection<TtvUser>
-	private lateinit var helix: TwitchHelix
-	override fun helix(): TwitchHelix {
-		return helix
-	}
+	private lateinit var ttvUserCollection: MongoCollection<TtvUser>
 	
 	private var helixCredential: OAuth2Credential? = null
 	override fun helixAccessToken(): String? {
@@ -44,14 +36,9 @@ class MongoTtvBackend : TtvStorageInterface, MongoBackend {
 	
 	private val ttvUserCache: MutableMap<String, TtvUser> = Collections.synchronizedSortedMap(TreeMap())
 	
-	constructor(opts: MongoTtvOptions) {
-		db = opts.db
-		ttvUserCollection = createCollectionIfNotExists(opts.collectionName, TtvUser::class.java)
-	}
+	constructor(opts: MongoTtvOptions): this(opts.db, opts.helix, opts.credential)
 	
-	constructor(db: MongoDatabase, helix: TwitchHelix, helixCredential: OAuth2Credential?) {
-		this.db = db
-		this.helix = helix
+	constructor(db: MongoDatabase, helix: TwitchHelix, helixCredential: OAuth2Credential?) : this(db, helix) {
 		this.helixCredential = helixCredential
 		val conventions: MutableList<Convention> = ArrayList(Conventions.DEFAULT_CONVENTIONS)
 		conventions.add(Conventions.SET_PRIVATE_FIELDS_CONVENTION)
@@ -126,10 +113,14 @@ class MongoTtvBackend : TtvStorageInterface, MongoBackend {
 	
 	//endregion
 
-	override fun findTtvUserByLogin(user: User): Optional<TtvUser> {
-		val result = ttvUserCollection.find(Filters.eq("_id", user.id)).first()
+	override fun findTtvUserByLogin(login: String): TtvUser? {
+		val result = ttvUserCollection.find(Filters.eq("login", login)).first()
 		if (result != null) ttvUserCache[result.id] = result
-		return Optional.ofNullable(result)
+		return result
+	}
+	
+	override fun findTtvUserByHelixUser(user: User): TtvUser? {
+		TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 	}
 	
 	override fun findTtvUsers(helixUsers: List<User>): List<TtvUser> {
@@ -138,6 +129,10 @@ class MongoTtvBackend : TtvStorageInterface, MongoBackend {
 			userIds.add(u.id)
 		}
 		return findTtvUsersByIds(userIds)
+	}
+	
+	override fun findTtvUsers(helixUsers: List<User>?, userIds: List<String>?, logins: List<String>?): List<TtvUser?> {
+		TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 	}
 	
 	override fun findTtvUsersByIds(userIds: List<String>): List<TtvUser> {
@@ -193,5 +188,11 @@ class MongoTtvBackend : TtvStorageInterface, MongoBackend {
 		updatedUser?.let { ttvUserCache[updatedUser.id] = updatedUser }
 		return updatedUser
 	}
+	
+	override fun setProperty(userId: String, propertyName: String, value: Any?): TtvUser? {
+		TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+	}
+	
+	
 	//endregion
 }

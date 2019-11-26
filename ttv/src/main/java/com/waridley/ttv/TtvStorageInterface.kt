@@ -2,81 +2,134 @@
  * Copyright (c) 2019 Kevin Day
  * Licensed under the EUPL
  */
+package com.waridley.ttv
 
-package com.waridley.ttv;
+import com.github.twitch4j.helix.TwitchHelix
+import com.github.twitch4j.helix.domain.User
+import java.util.*
 
-import com.github.twitch4j.helix.TwitchHelix;
-import com.github.twitch4j.helix.domain.User;
-import com.github.twitch4j.helix.domain.UserList;
-
-import java.util.*;
-
-public interface TtvStorageInterface {
+interface TtvStorageInterface {
 	
-	TwitchHelix helix();
-	String helixAccessToken();
+	val helix: TwitchHelix
 	
-	default TtvUser findOrCreateTtvUserFromId(String ttvUserId) {
-		return findOrCreateTtvUser(getHelixUsersFromIds(Collections.singletonList(ttvUserId)).get(0));
+	fun helixAccessToken(): String?
+	
+	fun findOrCreateTtvUserFromId(userId: String): TtvUser? {
+		return getHelixUsersFromIds(listOf(userId))[0]?.let { findOrCreateTtvUser(it) }
 	}
-	default TtvUser findOrCreateTtvUserFromLogin(String ttvLogin) {
-		return findOrCreateTtvUser(getHelixUsersFromLogins(Collections.singletonList(ttvLogin)).get(0));
+	
+	fun findOrCreateTtvUserFromLogin(login: String): TtvUser? {
+		return getHelixUsersFromLogins(listOf(login))[0]?.let { findOrCreateTtvUser(it) }
 	}
-	TtvUser findOrCreateTtvUser(User user);
 	
-	default Optional<TtvUser> findTtvUserById(String ttvUserId) {
-		return findTtvUserByLogin(getHelixUsersFromIds(Collections.singletonList(ttvUserId)).get(0));
+	fun findOrCreateTtvUser(user: User): TtvUser?
+	
+	fun findTtvUserById(userId: String): TtvUser? {
+		return getHelixUsersFromIds(listOf(userId))[0]?.let { findTtvUserByHelixUser(it) }
 	}
-	default Optional<TtvUser> findTtvUserByLogin(String ttvLogin) {
-		return findTtvUserByLogin(getHelixUsersFromLogins(Collections.singletonList(ttvLogin)).get(0));
+	
+	fun findTtvUserByLogin(login: String): TtvUser? {
+		return getHelixUsersFromLogins(listOf(login))[0]?.let { findTtvUserByHelixUser(it) }
 	}
-	Optional<TtvUser> findTtvUserByLogin(User user);
 	
-	List<TtvUser> findTtvUsers(List<User> helixUsers);
-	List<TtvUser> findTtvUsersByIds(List<String> userIds);
+	fun findTtvUserByHelixUser(user: User): TtvUser?
 	
+	fun findTtvUsers(helixUsers: List<User>): List<TtvUser?>
+	fun findTtvUsersByIds(userIds: List<String>): List<TtvUser?>
 	
-	default List<User> getHelixUsersFromIds(List<String> ids) {
-		List<User> result = new ArrayList<>(ids.size());
-		int divSize = 100;
-		List<List<String>> idLists = new ArrayList<>((ids.size() / divSize) + 1);
-		for(int i = 0; i < ids.size(); i += divSize) {
-			int to = i + divSize;
-			if(to >= ids.size()) to = ids.size();
-			idLists.add(ids.subList(i, to));
+	fun findTtvUser(helixUser: User?, userId: String?, login: String?): TtvUser? {
+		return findTtvUsers(
+				helixUser?.let{ listOf(it) },
+				userId?.let{ listOf(it) },
+				login?.let{ listOf(it) }
+		)[0]
+	}
+	fun findTtvUsers(helixUsers: List<User>?, userIds: List<String>?, logins: List<String>?): List<TtvUser?>
+	
+	fun getHelixUsersFromIds(ids: List<String>): List<User?> {
+		val result: MutableList<User?> = ArrayList(ids.size)
+		val divSize = 100
+		val idLists: MutableList<List<String>> = ArrayList(ids.size / divSize + 1)
+		var i = 0
+		while (i < ids.size) {
+			var to = i + divSize
+			if (to >= ids.size) to = ids.size
+			idLists.add(ids.subList(i, to))
+			i += divSize
 		}
-		for(List<String> l : idLists) {
-			UserList userList = helix().getUsers(
+		for (l in idLists) {
+			val userList = helix.getUsers(
 					helixAccessToken(),
 					l,
 					null
-			).execute();
-			result.addAll(userList.getUsers());
+			).execute()
+			result.addAll(userList.users)
 		}
-		return result;
+		return result
 	}
 	
-	default List<User> getHelixUsersFromLogins(List<String> logins) {
-		List<User> result = new Vector<>(logins.size());
-		int divSize = 100;
-		List<List<String>> loginLists = new Vector<>((logins.size() / divSize) + 1);
-		for(int i = 0; i < logins.size(); i += divSize) {
-			int to = i + divSize;
-			if(to > logins.size()) to = logins.size();
-			loginLists.add(logins.subList(i, to));
+	fun getHelixUsersFromLogins(logins: List<String>): List<User?> {
+		val result: MutableList<User?> = Vector(logins.size)
+		val divSize = 100
+		val loginLists: MutableList<List<String>> = Vector(logins.size / divSize + 1)
+		var i = 0
+		while (i < logins.size) {
+			var to = i + divSize
+			if (to > logins.size) to = logins.size
+			loginLists.add(logins.subList(i, to))
+			i += divSize
 		}
-		for(List<String> l : loginLists) {
-			UserList userList = helix().getUsers(
+		for (l in loginLists) {
+			val userList = helix.getUsers(
 					helixAccessToken(),
 					null,
 					l
-			).execute();
-			result.addAll(userList.getUsers());
+			).execute()
+			result.addAll(userList.users)
 		}
-		
-		return result;
+		return result
 	}
 	
-	TtvUser logMinutes(TtvUser user, long minutes, boolean online);
-	TtvUser logGuestMinutes(TtvUser user, long minutes, String guestName);
+	fun logMinutes(user: TtvUser, minutes: Long, online: Boolean): TtvUser? {
+		return if(online) incrementProperty(user.id, "onlineMinutes", minutes)
+		else incrementProperty(user.id, "offlineMinutes", minutes)
+	}
+	fun logGuestMinutes(user: TtvUser, minutes: Long, guestLogin: String): TtvUser?
+	
+	fun <T> getProperty(userId: String, propertyName: String): T? {
+		return getProperties<T>(listOf(userId), propertyName)[0] as T
+	}
+	fun <T> getProperties(userIds: List<String>, propertyName: String): List<T?> {
+		return userIds.map { getProperty<T>(it, propertyName) }
+	}
+	
+	fun setProperty(userId: String, propertyName: String, value: Any?): TtvUser?
+	fun setProperties(valuesPerUser: List<Pair<String, Any?>>, propertyName: String): List<TtvUser?> {
+		return valuesPerUser.map { setProperty(it.first, propertyName, it.second) }
+	}
+	fun setProperties(userId: String, nameValuePairs: List<Pair<String, Any?>>): List<TtvUser?> {
+		return nameValuePairs.map { setProperty(userId, it.first, it.second) }
+	}
+	
+	fun incrementProperty(userId: String, propertyName: String, amount: Number): TtvUser? {
+		return setProperty(
+				userId,
+				propertyName,
+				getProperty<Number>(
+						userId,
+						propertyName
+				)?.let{ it + amount }
+		)
+	}
+}
+
+private operator fun Number.plus(n: Number): Number {
+	return when(this) {
+		is Byte -> this + n.toByte()
+		is Short -> this + n.toShort()
+		is Int -> this + n.toInt()
+		is Long -> this + n.toLong()
+		is Float -> this + n.toFloat()
+		else -> this as Double + n.toDouble()
+	}
 }

@@ -1,42 +1,22 @@
-package com.waridley.ttv;
+package com.waridley.ttv
 
-import com.github.twitch4j.helix.domain.User;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.github.twitch4j.helix.domain.User
+import lombok.Data
+import lombok.NoArgsConstructor
+import java.util.*
 
-import java.util.HashMap;
-import java.util.Map;
-
-@Data
-@NoArgsConstructor
-public class TtvUser {
+class TtvUser(val helixUser: User) {
+	val id: String = helixUser.id
+	var offlineMinutes = 0L
+	var onlineMinutes = 0L
+	var guestMinutes = 0L
+	val properties: MutableMap<String, Any> = HashMap()
 	
-	private String id = "";
-	
-	private User helixUser = null;
-	
-	private long offlineMinutes = 0L;
-	
-	private long onlineMinutes = 0L;
-	
-	private long guestMinutes = 0L;
-	
-	private Map<String, Object> properties = new HashMap<>();
-	
-	private Object getProperty(String name) {
-		return properties.get(name);
+	fun channelMinutes(): Long {
+		return onlineMinutes + offlineMinutes
 	}
 	
-	private void setProperty(String name, Object value) {
-		properties.put(name, value);
+	fun totalMinutes(): Long {
+		return onlineMinutes + offlineMinutes + guestMinutes
 	}
-	
-	public TtvUser(User helixUser) {
-		setHelixUser(helixUser);
-		setId(helixUser.getId());
-	}
-	
-	public long channelMinutes() { return onlineMinutes + offlineMinutes; }
-	public long totalMinutes() { return onlineMinutes + offlineMinutes + guestMinutes; }
-	
 }

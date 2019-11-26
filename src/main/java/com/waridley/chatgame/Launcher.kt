@@ -1,14 +1,14 @@
 package com.waridley.chatgame
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.groups.groupChoice
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.twitch4j.TwitchClient
 import com.waridley.ttv.MongoTtvOptions
 import com.waridley.ttv.TtvClientOptions
-import com.waridley.ttv.mongo.MongoTtvBackend
 
-class Launcher: CliktCommand(name = "chatgame") {
+class Launcher: CliktCommand(name = "chatgame", invokeWithoutSubcommand = true) {
 	
 	private lateinit var twitchClient: TwitchClient
 	
@@ -25,13 +25,18 @@ class Launcher: CliktCommand(name = "chatgame") {
 		
 		when(val backOpts = ttvBackendOptions) {
 				is MongoTtvOptions -> {
-					val ttvBackend = MongoTtvBackend(backOpts.db, twitchClient.helix, ttvClientOptions.idProvider.get)
+				
 				}
 		}
 		
-		CliParser(ttvBackend, gameBackend).start()
+		
 	}
 	
 }
 
-fun main(args: Array<String>) = Launcher().main(args)
+val launchCmd = Launcher().subcommands(TtvClientOptions())
+
+fun main(args: Array<String>) {
+	launchCmd.main(args)
+	StdinParser().start()
+}

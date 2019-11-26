@@ -19,7 +19,7 @@ import org.bson.codecs.pojo.PojoCodecProvider
 import org.bson.types.ObjectId
 import java.util.*
 
-class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchHelix, private val helixCredential: OAuth2Credential) : GameStorageInterface, MongoBackend {
+class MongoGameBackend(override val db: MongoDatabase, private val helix: TwitchHelix, private val helixCredential: OAuth2Credential) : GameStorageInterface, MongoBackend {
 	private val playerCollection: MongoCollection<Document>
 	private val playerView: MongoCollection<Player?>
 	private val playerCache: MutableMap<ObjectId?, Player> = Collections.synchronizedSortedMap(TreeMap<ObjectId, Player>())
@@ -203,10 +203,7 @@ class MongoGameBackend(private val db: MongoDatabase, private val helix: TwitchH
 		}
 		return player
 	}
-	
-	override fun db(): MongoDatabase {
-		return db
-	} //endregion
+	//endregion
 	
 	init {
 		val conventions: MutableList<Convention> = ArrayList(Conventions.DEFAULT_CONVENTIONS)

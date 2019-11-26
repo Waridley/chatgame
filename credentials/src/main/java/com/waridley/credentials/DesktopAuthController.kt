@@ -36,29 +36,29 @@ import java.nio.charset.StandardCharsets
  * An AuthenticationController which uses java.awt.Desktop.browse() to send the user to the identity provider's authentication URL.
  * If Desktop is not supported, it will print an error telling the user they may be able to paste the URL in a browser to continue authentication.
  */
-class DesktopAuthController : AuthenticationController {
+open class DesktopAuthController : AuthenticationController {
 	/**
 	 * The URI of an info page that redirects the user to the authentication URL after giving them some explanation.
 	 */
-	protected var infoURI: URI?
+	protected var infoUri: URI?
 	
 	/**
 	 * Creates a DesktopAuthenticationController with no infoURL.
 	 * The user will be directed straight to the identity provider's authentication URL.
 	 */
 	constructor() {
-		infoURI = null
+		infoUri = null
 	}
 	
 	/**
 	 * Creates a DesktopAuthController with an info page to direct the user to instead of sending them directly to the identity provider's authentication URL.
 	 * The authentication URL will be added to the query of the infoURL, and the info page should contain some mechanism to redirect the user there.
 	 *
-	 * @param infoURL The URL of the page to send the user to first
+	 * @param infoUrl The URL of the page to send the user to first
 	 * @throws URISyntaxException if a URI can't be created with infoURL
 	 */
-	constructor(infoURL: String?) {
-		infoURI = URI(infoURL)
+	constructor(infoUrl: String?) {
+		infoUri = infoUrl?.let { URI(infoUrl) }
 	}
 	
 	override fun startOAuth2AuthorizationCodeGrantType(provider: OAuth2IdentityProvider, redirectUrl: String, scopes: List<Any>) { //getAuthenticationUrl() does not URL-encode the scopes for some reason
@@ -66,15 +66,15 @@ class DesktopAuthController : AuthenticationController {
 		//				.replace(' ', '+'); //set scopeSeparator to "+" in RefreshingProvider for testing
 		try {
 			val browseURI: URI
-			if (infoURI != null) { //infoURI is present, send user there instead of directly to auth page
+			if (infoUri != null) { //infoURI is present, send user there instead of directly to auth page
 //get parts of infoURI in order to add authURL to query
-				val scheme = infoURI!!.scheme
-				val userInfo = infoURI!!.userInfo
-				val host = infoURI!!.host
-				val port = infoURI!!.port
-				val path = infoURI!!.path
-				var query = infoURI!!.query
-				val fragment = infoURI!!.fragment
+				val scheme = infoUri!!.scheme
+				val userInfo = infoUri!!.userInfo
+				val host = infoUri!!.host
+				val port = infoUri!!.port
+				val path = infoUri!!.path
+				var query = infoUri!!.query
+				val fragment = infoUri!!.fragment
 				//add authURL to query
 				if (query == null) query = "" else query += "&"
 				query += "authurl=" + URLEncoder.encode(authURL, StandardCharsets.UTF_8.toString())

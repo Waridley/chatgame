@@ -11,7 +11,7 @@ class CommandExecutive internal constructor(private val ttvStorageInterface: Ttv
 	val check: PermissionChecker
 	
 	class InfoRelayer(private val ttvStorageInterface: TtvStorageInterface, private val gameStorageInterface: GameStorageInterface) {
-		fun ttvUserFromLogin(login: String?): TtvUser {
+		fun ttvUserFromLogin(login: String): TtvUser? {
 			return ttvStorageInterface.findOrCreateTtvUserFromLogin(login)
 		}
 		

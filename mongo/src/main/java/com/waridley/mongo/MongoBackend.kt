@@ -1,28 +1,29 @@
-package com.waridley.mongo;
+package com.waridley.mongo
 
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoCollection
+import com.mongodb.client.MongoDatabase
 
-public interface MongoBackend {
+interface MongoBackend {
 	
-	MongoDatabase db();
+	val db: MongoDatabase
 	
-	default <TDocument> MongoCollection<TDocument> createCollectionIfNotExists(String collectionName, Class<TDocument> documentClass) {
-		return createCollectionIfNotExists(db(), collectionName, documentClass);
+	fun <TDocument> createCollectionIfNotExists(collectionName: String, documentClass: Class<TDocument>): MongoCollection<TDocument> {
+		return createCollectionIfNotExists(db, collectionName, documentClass)
 	}
 	
-	static <TDocument> MongoCollection<TDocument> createCollectionIfNotExists(MongoDatabase db, String collectionName, Class<TDocument> documentClass) {
-		boolean collectionExists = false;
-		for(String name : db.listCollectionNames()) {
-			if(name.equals(collectionName)) {
-				collectionExists = true;
-				break;
+	companion object {
+		fun <TDocument> createCollectionIfNotExists(db: MongoDatabase, collectionName: String, documentClass: Class<TDocument>): MongoCollection<TDocument> {
+			var collectionExists = false
+			for (name in db.listCollectionNames()) {
+				if (name == collectionName) {
+					collectionExists = true
+					break
+				}
 			}
+			if (!collectionExists) {
+				db.createCollection(collectionName)
+			}
+			return db.getCollection(collectionName, documentClass)
 		}
-		if(!collectionExists)  {
-			db.createCollection(collectionName);
-		}
-		return db.getCollection(collectionName, documentClass);
 	}
-	
 }
