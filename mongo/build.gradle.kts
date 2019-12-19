@@ -12,10 +12,10 @@ version = "0.1"
 //sourceCompatibility = 1.8
 
 repositories {
+    mavenLocal()
     mavenCentral()
 
     maven(url = "https://oss.jfrog.org/artifactory/libs-release")
-    maven(url = "https://raw.githubusercontent.com/Waridley/twitch4j/master")
 }
 
 dependencies {
@@ -25,11 +25,11 @@ dependencies {
     implementation("org.mongodb:mongo-java-driver:3.11.0")
 
     //Twitch API library
-    implementation(group = "com.github.twitch4j", name = "twitch4j", version = "1.0.0-alpha.17")
+    implementation(group = "com.github.twitch4j", name = "twitch4j", version = "2.0.0")
 
     //lombok
-    compileOnly("org.projectlombok:lombok:1.18.10")
-    annotationProcessor("org.projectlombok:lombok:1.18.10")
+//    compileOnly("org.projectlombok:lombok:1.18.10")
+//    annotationProcessor("org.projectlombok:lombok:1.18.10")
 
     //BSON plugin for Jackson
     implementation("de.undercouch:bson4jackson:2.9.2")

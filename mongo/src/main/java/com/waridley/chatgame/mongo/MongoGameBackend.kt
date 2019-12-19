@@ -8,7 +8,6 @@ import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.*
 import com.waridley.chatgame.api.backend.GameStorageInterface
 import com.waridley.chatgame.game.Player
-import com.waridley.chatgame.game.inventory.Backpack
 import com.waridley.mongo.MongoBackend
 import com.waridley.ttv.TtvUser
 import org.bson.Document
@@ -50,7 +49,6 @@ class MongoGameBackend(override val db: MongoDatabase, private val helix: Twitch
 					Updates.setOnInsert(
 							Document("ttvUserId", ttvUser.id)
 									.append("username", ttvUser.helixUser.displayName)
-									.append("backpack", Backpack())
 					),
 					FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
 			)
@@ -79,7 +77,6 @@ class MongoGameBackend(override val db: MongoDatabase, private val helix: Twitch
 						Updates.setOnInsert(
 								Document("ttvUserId", ttvUser.id)
 										.append("username", ttvUser.helixUser.displayName)
-										.append("backpack", Backpack())
 						),
 						FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
 				)
@@ -110,7 +107,6 @@ class MongoGameBackend(override val db: MongoDatabase, private val helix: Twitch
 						Updates.setOnInsert(
 								Document("ttvUserId", ttvUser?.id)
 										.append("username", gameUsername)
-										.append("backpack", Backpack())
 						),
 						FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
 				)

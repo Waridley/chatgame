@@ -14,7 +14,6 @@ import com.waridley.mongo.MongoBackend
 import com.waridley.mongo.MongoMap
 import org.bson.Document
 import org.bson.codecs.configuration.CodecRegistries
-import org.jetbrains.annotations.NotNull
 
 class MongoCredentialStorageBackend(override val db: MongoDatabase, collectionName: String = "credentials") : NamedCredentialStorageBackend(), MongoBackend {
 	private val credCollection: MongoCollection<Document>

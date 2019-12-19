@@ -4,9 +4,6 @@
  */
 package com.waridley.chatgame.game.inventory
 
-import lombok.Data
-
-@Data
 class Chest {
 	var inside: ItemContainer? = null
 }

@@ -4,7 +4,6 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
-import com.github.ajalt.clikt.parameters.types.int
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential
 import com.github.twitch4j.helix.TwitchHelix
 import com.mongodb.ConnectionString

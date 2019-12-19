@@ -41,7 +41,7 @@ class InfoCommands internal constructor(private val commandMediator: CommandMedi
 	class CurrencyCommands(private val commandMediator: CommandMediator) {
 		fun coins(event: CommandEvent) {
 			val player = commandMediator.getPlayerByTtvUserId(event.user.id.toString())
-			event.respondToUser("@" + event.user.name + " (" + player!!.username + ") is carrying " + player.backpack.currencyPouch.coins.amount + " coins")
+//			event.respondToUser("@" + event.user.name + " (" + player!!.username + ") is carrying " + player.backpack.currencyPouch.coins.amount + " coins")
 		}
 		
 	}

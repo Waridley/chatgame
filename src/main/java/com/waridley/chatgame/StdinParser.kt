@@ -3,11 +3,6 @@ package com.waridley.chatgame
 import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.output.TermUi.echo
 import com.github.ajalt.clikt.output.defaultCliktConsole
-import com.waridley.chatgame.api.backend.GameStorageInterface
-import com.waridley.chatgame.server.Server
-import com.waridley.chatgame.ttv_chat_client.TtvChatGameClientOptions
-import com.waridley.ttv.TtvClientOptions
-import com.waridley.ttv.TtvStorageInterface
 import kotlin.system.exitProcess
 
 class StdinParser {

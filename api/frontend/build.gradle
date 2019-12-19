@@ -12,13 +12,12 @@ repositories {
     mavenCentral()
     jcenter()
     maven { url "https://oss.jfrog.org/artifactory/libs-release"}
-    maven { url 'https://raw.githubusercontent.com/Waridley/twitch4j/master'}
 }
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compileOnly 'org.projectlombok:lombok:1.18.10'
-    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+//    compileOnly 'org.projectlombok:lombok:1.18.10'
+//    annotationProcessor 'org.projectlombok:lombok:1.18.10'
     compile 'de.undercouch:bson4jackson:2.9.2'
 
     compile project(":game")

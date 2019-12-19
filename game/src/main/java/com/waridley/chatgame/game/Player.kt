@@ -4,7 +4,6 @@
  */
 package com.waridley.chatgame.game
 
-import com.waridley.chatgame.game.inventory.Backpack
 import com.waridley.ttv.TtvUser
 import org.bson.types.ObjectId
 
@@ -50,7 +49,6 @@ class Player @JvmOverloads constructor(id: ObjectId?, username: String? = null, 
 		setTtvUser(ttvUser)
 	}
 	
-	val backpack = Backpack()
 	
 	//	private Long twitchUserId = null;
 //	public Long getTwitchUserId() { return twitchUserId; }

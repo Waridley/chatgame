@@ -10,10 +10,10 @@ group = "com.waridley.chatgame"
 version = "0.1"
 
 repositories {
+	mavenLocal()
     mavenCentral()
     jcenter()
     maven(url = "https://oss.jfrog.org/artifactory/libs-release")
-    maven(url = "https://raw.githubusercontent.com/Waridley/twitch4j/master")
 }
 
 dependencies {
@@ -26,11 +26,11 @@ dependencies {
     compile("org.mongodb:mongo-java-driver:3.11.0")
 
     //Twitch API library
-    compile(group = "com.github.twitch4j", name = "twitch4j", version = "1.0.0-alpha.17")
+    compile(group = "com.github.twitch4j", name = "twitch4j", version = "2.0.0")
 
     //lombok
-    compileOnly("org.projectlombok:lombok:1.18.10")
-    annotationProcessor("org.projectlombok:lombok:1.18.10")
+//    compileOnly("org.projectlombok:lombok:1.18.10")
+//    annotationProcessor("org.projectlombok:lombok:1.18.10")
 
     compile("de.undercouch:bson4jackson:2.9.2")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

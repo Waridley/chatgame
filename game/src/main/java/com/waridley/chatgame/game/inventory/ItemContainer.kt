@@ -5,10 +5,8 @@
 package com.waridley.chatgame.game.inventory
 
 import com.waridley.chatgame.game.GameObject
-import lombok.Data
 import java.util.*
 
-@Data
 class ItemContainer {
 	var items: List<GameObject>
 	

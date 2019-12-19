@@ -15,9 +15,7 @@ import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
 import com.waridley.chatgame.api.frontend.CommandMediator
 import com.waridley.chatgame.api.frontend.GameClient
-import com.waridley.chatgame.game.GameClientOptions
 import com.waridley.credentials.NamedCredentialStorageBackend
-import com.waridley.ttv.TtvClientOptions
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.InetSocketAddress

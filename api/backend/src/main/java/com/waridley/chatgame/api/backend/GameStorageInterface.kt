@@ -3,7 +3,6 @@ package com.waridley.chatgame.api.backend
 import com.waridley.chatgame.game.Player
 import com.waridley.ttv.TtvUser
 import org.bson.types.ObjectId
-import java.util.*
 
 interface GameStorageInterface {
 	/**

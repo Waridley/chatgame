@@ -13,7 +13,6 @@ repositories {
 
     jcenter()
     maven { url "https://oss.jfrog.org/artifactory/libs-release"}
-    maven { url 'https://raw.githubusercontent.com/Waridley/twitch4j/master'}
 }
 
 dependencies {

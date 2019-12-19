@@ -1,8 +1,6 @@
 package com.waridley.ttv
 
 import com.github.twitch4j.helix.domain.User
-import lombok.Data
-import lombok.NoArgsConstructor
 import java.util.*
 
 class TtvUser(val helixUser: User) {

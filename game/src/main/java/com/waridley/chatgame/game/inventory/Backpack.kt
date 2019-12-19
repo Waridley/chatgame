@@ -4,9 +4,6 @@
  */
 package com.waridley.chatgame.game.inventory
 
-import lombok.Data
-
-@Data
 class Backpack {
 	private val mainPouch = ItemContainer()
 	val currencyPouch = CurrencyContainer()
