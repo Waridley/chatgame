@@ -33,35 +33,35 @@ dependencies {
     testImplementation(group: "junit", name: "junit", version: "4.12")
 
     //logger
-    implementation(group: "org.slf4j", name: "slf4j-simple", version: "1.7.2")
+    compile(group: "org.slf4j", name: "slf4j-simple", version: "1.7.2")
 
     //mongodb java driver
-    implementation("org.mongodb:mongo-java-driver:3.11.0")
+    compile("org.mongodb:mongo-java-driver:3.11.0")
 
     //Twitch API library
-//    implementation group: "com.github.twitch4j", name: "twitch4j", version: "1.0.0-alpha.17"
-    implementation(group: "com.github.philippheuer.credentialmanager", name: "credentialmanager", version: "0.1.0")
+//    compile group: "com.github.twitch4j", name: "twitch4j", version: "1.0.0-alpha.17"
+    compile(group: "com.github.philippheuer.credentialmanager", name: "credentialmanager", version: "0.1.0")
 
     //lombok
-//    implementationOnly("org.projectlombok:lombok:1.18.10")
+//    compileOnly("org.projectlombok:lombok:1.18.10")
 //    annotationProcessor("org.projectlombok:lombok:1.18.10")
 
     //BSON jackson plugin
-    implementation("de.undercouch:bson4jackson:2.9.2")
+    compile("de.undercouch:bson4jackson:2.9.2")
     
     //CLI parser
-    implementation("com.github.ajalt:clikt:2.3.0")
+    compile("com.github.ajalt:clikt:2.3.0")
     
-//    implementation project("api")
-//    implementation project("ttv_chat_client")
-//    implementation project("ttv")
-//    implementation project("credentials")
-//    implementation project("mongo")
-//    implementation project("api:backend")
-//    implementation project("api:frontend")
-    implementation project("server")
-//    implementation project("game")
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+//    compile project("api")
+//    compile project("ttv_chat_client")
+//    compile project("ttv")
+//    compile project("credentials")
+//    compile project("mongo")
+//    compile project("api:backend")
+//    compile project("api:frontend")
+    compile project("server")
+//    compile project("game")
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 compileKotlin {
     kotlinOptions {
