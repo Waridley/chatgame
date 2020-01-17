@@ -1,8 +1,9 @@
-package com.waridley.chatgame.api.frontend
+package com.waridley.chatgame.api.backend
 
+import com.waridley.chatgame.api.CommandMediator
 import com.waridley.chatgame.game.Player
 
-class SocketCommandMediator : CommandMediator {
+class ServerSocketCommandMediator : CommandMediator {
 	override fun getPlayerByTtvLogin(login: String): Player? {
 		return null
 	}

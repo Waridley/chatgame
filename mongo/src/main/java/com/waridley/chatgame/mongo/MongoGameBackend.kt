@@ -120,7 +120,8 @@ class MongoGameBackend(override val db: MongoDatabase, private val helix: Twitch
 	}
 	
 	//endregion
-//region findPlayer()
+	
+	//region findPlayer()
 	override fun findPlayer(ttvUser: TtvUser): Player? {
 		var player = checkCacheFor(ttvUser)
 		if (player == null) {

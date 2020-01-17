@@ -1,6 +1,6 @@
 package com.waridley.chatgame.server
 
-import com.waridley.chatgame.api.frontend.CommandMediator
+import com.waridley.chatgame.api.CommandMediator
 import com.waridley.chatgame.game.Player
 
 class EmbeddedCommandMediator(private val exec: CommandExecutive) : CommandMediator {

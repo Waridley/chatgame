@@ -2,7 +2,7 @@ package com.waridley.chatgame.ttv_chat_client
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.requireObject
-import com.waridley.chatgame.api.frontend.CommandMediator
+import com.waridley.chatgame.api.CommandMediator
 import com.waridley.ttv.TtvClientOptions
 
 class TtvChatGameClientOptions(

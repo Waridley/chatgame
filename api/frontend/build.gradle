@@ -19,7 +19,7 @@ dependencies {
 //    compileOnly 'org.projectlombok:lombok:1.18.10'
 //    annotationProcessor 'org.projectlombok:lombok:1.18.10'
     compile 'de.undercouch:bson4jackson:2.9.2'
-
+	api(project(":api"))
     compile project(":game")
     compile project(":ttv")
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"

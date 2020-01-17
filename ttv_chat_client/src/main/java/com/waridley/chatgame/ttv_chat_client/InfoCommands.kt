@@ -1,7 +1,7 @@
 package com.waridley.chatgame.ttv_chat_client
 
 import com.github.twitch4j.common.enums.CommandPermission
-import com.waridley.chatgame.api.frontend.CommandMediator
+import com.waridley.chatgame.api.CommandMediator
 import com.waridley.ttv.CommandEvent
 import org.slf4j.LoggerFactory
 

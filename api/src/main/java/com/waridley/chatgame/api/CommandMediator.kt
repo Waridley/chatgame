@@ -1,4 +1,4 @@
-package com.waridley.chatgame.api.frontend
+package com.waridley.chatgame.api
 
 import com.waridley.chatgame.game.Player
 

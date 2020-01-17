@@ -13,7 +13,7 @@ import com.github.twitch4j.chat.events.channel.ChannelJoinEvent
 import com.github.twitch4j.chat.events.channel.ChannelLeaveEvent
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
-import com.waridley.chatgame.api.frontend.CommandMediator
+import com.waridley.chatgame.api.CommandMediator
 import com.waridley.chatgame.api.frontend.GameClient
 import com.waridley.credentials.NamedCredentialStorageBackend
 import org.slf4j.LoggerFactory
